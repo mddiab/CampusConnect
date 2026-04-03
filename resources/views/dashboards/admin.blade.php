@@ -3,69 +3,177 @@
 @section('title', 'Admin Dashboard')
 
 @section('content')
-    <main class="page">
-        <div class="container">
-            <section class="hero-card">
-                <h1>Admin Dashboard</h1>
-                <p>
-                    This page should show the administrator's system overview. Replace the placeholders below with
-                    real totals, management tools, department settings, and platform activity summaries.
-                </p>
+<main class="page">
+<div class="container">
 
-                <div class="stat-row">
-                    <div class="stat-box">
-                        <strong class="placeholder-value">Show number here</strong>
-                        <span>Total number of registered users in the system.</span>
-                    </div>
+    <!-- HERO -->
+    <section class="hero-card">
+        <h1>Admin Dashboard</h1>
+        <p>Manage all system components from one place.</p>
 
-                    <div class="stat-box">
-                        <strong class="placeholder-value">Show number here</strong>
-                        <span>Total departments or offices currently using CampusConnect.</span>
-                    </div>
-
-                    <div class="stat-box">
-                        <strong class="placeholder-value">Show number here</strong>
-                        <span>Total active requests across the platform today.</span>
-                    </div>
-                </div>
-            </section>
-
-            <section class="section-stack">
-                <article class="panel">
-                    <h2>Administration Controls</h2>
-                    <ul>
-                        <li>Add the user management link or section here.</li>
-                        <li>Add the department and service category setup tools here.</li>
-                        <li>Add the platform-wide monitoring and reporting tools here.</li>
-                    </ul>
-                </article>
-
-                <article class="panel">
-                    <h2>System Snapshot</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Area</th>
-                                <th>Current Focus</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>User Management</td>
-                                <td>Show account totals, role distribution, and recent user changes here.</td>
-                            </tr>
-                            <tr>
-                                <td>Departments</td>
-                                <td>Show department list, assigned staff, and available service categories here.</td>
-                            </tr>
-                            <tr>
-                                <td>Activity Logs</td>
-                                <td>Show recent admin actions, major request updates, and audit log entries here.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </article>
-            </section>
+        <div class="stat-row">
+            <div class="stat-box">
+                <strong>{{ $totalUsers }}</strong>
+                <span>Users</span>
+            </div>
+            <div class="stat-box">
+                <strong>{{ $totalDepartments }}</strong>
+                <span>Departments</span>
+            </div>
+            <div class="stat-box">
+                <strong>{{ $todayRequests }}</strong>
+                <span>Requests Today</span>
+            </div>
         </div>
-    </main>
+    </section>
+
+    <!-- ADMIN CONTROLS -->
+    <section class="section-stack">
+
+        <article class="panel">
+            <h2>⚙️ Administration Controls</h2>
+        </article>
+
+        <!-- ================= USERS ================= -->
+        <article class="panel">
+            <h2>👤 User Management</h2>
+
+            <a href="#" class="btn">➕ Add User</a>
+
+            <table>
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @forelse($recentUsers as $user)
+                    <tr>
+                        <td>{{ $user->name }}</td>
+                        <td>{{ $user->email }}</td>
+                        <td>{{ ucfirst($user->role) }}</td>
+                        <td>
+                            <button>Edit</button>
+                            <form method="POST" action="#">
+                                @csrf
+                                @method('DELETE')
+                                <button style="color:red;">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4">No users found</td>
+                    </tr>
+                @endforelse
+                </tbody>
+            </table>
+        </article>
+
+        <!-- ================= DEPARTMENTS ================= -->
+        <article class="panel">
+            <h2>🏢 Departments</h2>
+
+            <form method="POST" action="#">
+                @csrf
+                <input type="text" name="name" placeholder="New Department" required>
+                <button type="submit">Add</button>
+            </form>
+
+            <table>
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Staff</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach($departments as $dept)
+                    <tr>
+                        <td>{{ $dept->name }}</td>
+                        <td>{{ $dept->users_count }}</td>
+                        <td>
+                            <button>Edit</button>
+
+                            <form method="POST" action="#">
+                                @csrf
+                                @method('DELETE')
+                                <button style="color:red;">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </article>
+
+        <!-- ================= CATEGORIES ================= -->
+        <article class="panel">
+            <h2>📂 Service Categories</h2>
+
+            <form method="POST" action="#">
+                @csrf
+                <input type="text" name="name" placeholder="Category name" required>
+
+                <select name="department_id">
+                    @foreach($departments as $dept)
+                        <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                    @endforeach
+                </select>
+
+                <button type="submit">Add</button>
+            </form>
+
+            @foreach($departments as $dept)
+                <h4>{{ $dept->name }}</h4>
+                <ul>
+                    @forelse($dept->categories as $cat)
+                        <li>
+                            {{ $cat->name }}
+                            <button>Edit</button>
+
+                            <form method="POST" action="#">
+                                @csrf
+                                @method('DELETE')
+                                <button style="color:red;">Delete</button>
+                            </form>
+                        </li>
+                    @empty
+                        <li>No categories</li>
+                    @endforelse
+                </ul>
+            @endforeach
+        </article>
+
+        <!-- ================= REPORTS ================= -->
+        <article class="panel">
+            <h2>📊 Reports & Monitoring</h2>
+
+            <button>Export</button>
+            <button>Refresh</button>
+
+            <ul>
+                @forelse($logs as $log)
+                    <li>
+                        <strong>{{ $log->title }}</strong>
+                        ({{ ucfirst(str_replace('_', ' ', $log->status)) }})
+                        <br>
+                        <small>
+                            {{ $log->user->name ?? 'Unknown' }} -
+                            {{ $log->created_at->diffForHumans() }}
+                        </small>
+                    </li>
+                @empty
+                    <li>No activity</li>
+                @endforelse
+            </ul>
+        </article>
+
+    </section>
+</div>
+</main>
 @endsection

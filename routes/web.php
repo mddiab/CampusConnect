@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StudentRequestController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AdminController;
 
 Route::get('/', [LoginController::class, 'create'])->name('login');
 Route::get('/login', fn () => redirect()->route('login'));
@@ -27,4 +28,26 @@ Route::middleware('auth')->group(function () {
         Route::get('/student/requests/{serviceRequest}/attachment', [StudentRequestController::class, 'download'])
             ->name('student.requests.attachment');
     });
+});
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])
+        ->name('admin.dashboard');
+
+    Route::get('/admin/users', function () {
+        return 'Users Page Coming Soon';
+    })->name('admin.users');
+
+    Route::get('/admin/departments', function () {
+        return 'Departments Page Coming Soon';
+    })->name('admin.departments');
+
+    Route::get('/admin/categories', function () {
+        return 'Categories Page Coming Soon';
+    })->name('admin.categories');
+
+    Route::get('/admin/reports', function () {
+        return 'Reports Page Coming Soon';
+    })->name('admin.reports');
 });
