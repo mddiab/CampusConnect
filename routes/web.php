@@ -14,12 +14,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
     Route::get('/staff/dashboard', [DashboardController::class, 'staff'])
         ->middleware('role:staff')
         ->name('staff.dashboard');
-    Route::get('/admin/dashboard', [DashboardController::class, 'admin'])
-        ->middleware('role:admin')
-        ->name('admin.dashboard');
 
     Route::middleware('role:student')->group(function () {
         Route::get('/student/dashboard', [DashboardController::class, 'student'])->name('student.dashboard');
@@ -32,9 +30,16 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
 
+    // Admin Dashboard
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])
         ->name('admin.dashboard');
 
+    // --- User Management Routes (For the Modals) ---
+    Route::post('/admin/users', [AdminController::class, 'storeUser'])->name('admin.users.store');
+    Route::put('/admin/users/{user}', [AdminController::class, 'updateUser'])->name('admin.users.update');
+    Route::delete('/admin/users/{user}', [AdminController::class, 'destroyUser'])->name('admin.users.destroy');
+
+    // --- Placeholders ---
     Route::get('/admin/users', function () {
         return 'Users Page Coming Soon';
     })->name('admin.users');
