@@ -49,6 +49,15 @@ class User extends Authenticatable
         return $this->hasMany(ServiceRequest::class);
     }
 
+    /**
+     * FEATURE: Staff Communication & Notes
+     * Get all notes written by this user (staff member)
+     */
+    public function notes(): HasMany
+    {
+        return $this->hasMany(Note::class);
+    }
+
     public function department()
 {
     return $this->belongsTo(Department::class);
