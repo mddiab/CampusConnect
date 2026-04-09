@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Department;
 use App\Models\ServiceRequest;
+use App\Models\ServiceCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -17,6 +19,15 @@ class StudentRequestFlowTest extends TestCase
     {
         Storage::fake('local');
 
+        $department = Department::query()
+            ->where('name', 'Information Technology')
+            ->firstOrFail();
+
+        $category = ServiceCategory::query()
+            ->where('name', 'Technical Support')
+            ->where('department_id', $department->id)
+            ->firstOrFail();
+
         $student = User::factory()->create([
             'role' => User::ROLE_STUDENT,
         ]);
@@ -25,8 +36,8 @@ class StudentRequestFlowTest extends TestCase
             ->actingAs($student)
             ->post(route('student.requests.store'), [
                 'title' => 'Printer not working in the library',
-                'department' => 'Information Technology',
-                'category' => 'Technical Support',
+                'department_id' => $department->id,
+                'service_category_id' => $category->id,
                 'description' => 'The printer near the main study area shows an error and does not print student documents.',
                 'attachment' => UploadedFile::fake()->create('printer-issue.pdf', 120, 'application/pdf'),
             ]);
@@ -38,12 +49,48 @@ class StudentRequestFlowTest extends TestCase
         $this->assertDatabaseHas('service_requests', [
             'user_id' => $student->id,
             'title' => 'Printer not working in the library',
-            'department' => 'Information Technology',
-            'category' => 'Technical Support',
+            'department_id' => $department->id,
+            'service_category_id' => $category->id,
             'status' => ServiceRequest::STATUS_PENDING,
         ]);
 
         Storage::disk('local')->assertExists($serviceRequest->attachment_path);
+    }
+
+    public function test_student_cannot_submit_a_category_for_the_wrong_department(): void
+    {
+        $informationTechnology = Department::query()
+            ->where('name', 'Information Technology')
+            ->firstOrFail();
+
+        $maintenance = Department::query()
+            ->where('name', 'Maintenance')
+            ->firstOrFail();
+
+        $maintenanceCategory = ServiceCategory::query()
+            ->where('name', 'Facility Maintenance')
+            ->where('department_id', $maintenance->id)
+            ->firstOrFail();
+
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        $response = $this
+            ->actingAs($student)
+            ->from(route('student.dashboard'))
+            ->post(route('student.requests.store'), [
+                'title' => 'Wrong category pairing',
+                'department_id' => $informationTechnology->id,
+                'service_category_id' => $maintenanceCategory->id,
+                'description' => 'This request intentionally uses a category from a different department.',
+            ]);
+
+        $response
+            ->assertRedirect(route('student.dashboard'))
+            ->assertSessionHasErrors('service_category_id');
+
+        $this->assertDatabaseCount('service_requests', 0);
     }
 
     public function test_student_dashboard_shows_only_the_logged_in_students_requests(): void

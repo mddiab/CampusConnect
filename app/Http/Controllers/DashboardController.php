@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
 use App\Models\ServiceRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,13 @@ class DashboardController extends Controller
     {
         $serviceRequests = $request->user()
             ->serviceRequests()
+            ->with(['department', 'serviceCategory'])
             ->latest()
+            ->get();
+
+        $departments = Department::query()
+            ->with(['categories' => fn ($query) => $query->orderBy('name')])
+            ->orderBy('name')
             ->get();
 
         return view('dashboards.student', [
@@ -28,14 +35,19 @@ class DashboardController extends Controller
             'inProgressRequestCount' => $serviceRequests->where('status', ServiceRequest::STATUS_IN_PROGRESS)->count(),
             'completedRequestCount' => $serviceRequests->where('status', ServiceRequest::STATUS_COMPLETED)->count(),
             'totalRequestCount' => $serviceRequests->count(),
-            'departments' => ServiceRequest::departments(),
-            'categories' => ServiceRequest::categories(),
+            'departments' => $departments,
+            'categoriesByDepartment' => $departments
+                ->mapWithKeys(fn (Department $department) => [
+                    $department->id => $department->categories
+                        ->map(fn ($category) => [
+                            'id' => $category->id,
+                            'name' => $category->name,
+                        ])
+                        ->values()
+                        ->all(),
+                ])
+                ->all(),
         ]);
-    }
-
-    public function staff(): View
-    {
-        return view('dashboards.staff');
     }
 
     public function admin(): View

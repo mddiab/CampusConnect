@@ -224,6 +224,17 @@
 
 <main class="page">
 <div class="container">
+    @if (session('success'))
+        <div class="success-box" style="margin-bottom: 16px;">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="error-box" style="margin-bottom: 16px;">
+            {{ $errors->first() }}
+        </div>
+    @endif
 
     <section class="hero-card">
         <h1>Admin Dashboard</h1>
@@ -267,6 +278,7 @@
                     <tr>
                         <th>Name</th>
                         <th>Email</th>
+                        <th>Department</th>
                         <th>Role</th>
                         <th>Actions</th>
                     </tr>
@@ -276,6 +288,7 @@
                         <tr class="user-row">
                             <td class="user-name"><strong>{{ $user->name }}</strong></td>
                             <td class="user-email">{{ $user->email }}</td>
+                            <td>{{ $user->department?->name ?? 'Not assigned' }}</td>
                             <td><span class="role-badge">{{ ucfirst($user->role) }}</span></td>
                             <td>
                                 <div class="action-group">
@@ -312,6 +325,17 @@
                                             <option value="student" {{ $user->role == 'student' ? 'selected' : '' }}>Student</option>
                                         </select>
                                     </div>
+                                    <div class="form-group">
+                                        <label>Department</label>
+                                        <select name="department_id">
+                                            <option value="">Not assigned</option>
+                                            @foreach($allDepartments as $department)
+                                                <option value="{{ $department->id }}" @selected((string) $user->department_id === (string) $department->id)>
+                                                    {{ $department->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
                                     <button type="submit" class="button button-primary w-full">Update User</button>
                                 </form>
                             </div>
@@ -319,7 +343,7 @@
 
                     @empty
                         <tr class="no-users-row">
-                            <td colspan="4" class="empty-state text-center">No users found</td>
+                            <td colspan="5" class="empty-state text-center">No users found</td>
                         </tr>
                     @endforelse
                     </tbody>
@@ -372,7 +396,7 @@
                 <div class="flex-gap">
                     <select name="dept" id="category-dept-select" class="custom-select" onchange="this.form.submit()">
                         <option value="all">All Departments</option>
-                        @foreach($departments as $dept)
+                        @foreach($allDepartments as $dept)
                             <option value="{{ $dept->id }}" @selected(request('dept') == $dept->id)>{{ $dept->name }}</option>
                         @endforeach
                     </select>
@@ -428,6 +452,8 @@
                                 <br>
                                 <small class="muted-text">
                                     <i class="fas fa-user mr-xs"></i> {{ $log->user->name ?? 'Unknown' }} &nbsp;|&nbsp; 
+                                    <i class="fas fa-building mr-xs"></i> {{ $log->departmentName() }} &nbsp;|&nbsp;
+                                    <i class="fas fa-folder mr-xs"></i> {{ $log->categoryName() }} &nbsp;|&nbsp;
                                     <i class="fas fa-clock mr-xs"></i> {{ $log->created_at->diffForHumans() }}
                                 </small>
                             </div>
@@ -468,9 +494,19 @@
                 </select>
             </div>
             <div class="form-group">
+                <label>Department</label>
+                <select name="department_id">
+                    <option value="">Not assigned</option>
+                    @foreach($allDepartments as $department)
+                        <option value="{{ $department->id }}">{{ $department->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="form-group">
                 <label>Password</label>
                 <input type="password" name="password" required minlength="8">
             </div>
+            <p class="muted-text" style="margin: 0 0 16px;">Department assignment is required for staff accounts.</p>
             <button type="submit" class="button button-primary w-full">Create User</button>
         </form>
     </div>

@@ -22,6 +22,7 @@ class AdminDashboardTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('Admin Dashboard');
+            ->assertSee('Admin Dashboard')
+            ->assertSee('Information Technology');
     }
 }

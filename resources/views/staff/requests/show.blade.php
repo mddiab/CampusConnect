@@ -8,7 +8,7 @@
     ];
 @endphp
 
-@section('title', 'Request Details')
+@section('title', 'Review Request')
 
 @section('content')
     <main class="page">
@@ -19,22 +19,28 @@
                 </div>
             @endif
 
+            @if ($errors->any())
+                <div class="error-box">
+                    {{ $errors->first() }}
+                </div>
+            @endif
+
             <section class="hero-card">
                 <h1>{{ $serviceRequest->title }}</h1>
                 <p>
-                    This page shows the full information for the selected student request, including its assigned
-                    department, category, current status, description, staff notes, and any attachment.
+                    Review the request details below, download the attachment if needed, and update the request status
+                    for the {{ $serviceRequest->departmentName() }} department.
                 </p>
 
                 <div class="stat-row">
                     <div class="stat-box">
                         <strong class="placeholder-value">{{ $serviceRequest->departmentName() }}</strong>
-                        <span>Department assigned to handle this request.</span>
+                        <span>Department handling the request.</span>
                     </div>
 
                     <div class="stat-box">
                         <strong class="placeholder-value">{{ $serviceRequest->categoryName() }}</strong>
-                        <span>Category selected when the request was submitted.</span>
+                        <span>Category assigned to the request.</span>
                     </div>
 
                     <div class="stat-box">
@@ -43,7 +49,7 @@
                                 {{ $serviceRequest->statusLabel() }}
                             </span>
                         </strong>
-                        <span>Current request status based on department handling.</span>
+                        <span>Current workflow state for this request.</span>
                     </div>
                 </div>
             </section>
@@ -52,7 +58,7 @@
                 <article class="panel">
                     <div class="panel-header">
                         <h2>Request Details</h2>
-                        <a href="{{ route('student.dashboard') }}" class="text-link">Back to Dashboard</a>
+                        <a href="{{ route('staff.dashboard') }}" class="text-link">Back to Staff Dashboard</a>
                     </div>
 
                     <div class="table-wrap">
@@ -75,8 +81,8 @@
                                     <td>{{ $serviceRequest->description }}</td>
                                 </tr>
                                 <tr>
-                                    <th>Staff Notes</th>
-                                    <td>{{ $serviceRequest->staff_notes ?: 'No staff notes have been added yet.' }}</td>
+                                    <th>Current Notes</th>
+                                    <td>{{ $serviceRequest->staff_notes ?: 'No staff notes have been saved yet.' }}</td>
                                 </tr>
                                 <tr>
                                     <th>Resolved On</th>
@@ -86,7 +92,7 @@
                                     <th>Attachment</th>
                                     <td>
                                         @if ($serviceRequest->attachment_path)
-                                            <a href="{{ route('student.requests.attachment', $serviceRequest) }}" class="text-link">
+                                            <a href="{{ route('staff.requests.attachment', $serviceRequest) }}" class="text-link">
                                                 Download {{ $serviceRequest->attachment_original_name ?? 'attachment file' }}
                                             </a>
                                         @else
@@ -100,12 +106,40 @@
                 </article>
 
                 <article class="panel">
-                    <h2>Status Meaning</h2>
-                    <ul>
-                        <li><strong>Pending:</strong> the request was submitted and is waiting for staff review.</li>
-                        <li><strong>In Progress:</strong> the department has started working on the request.</li>
-                        <li><strong>Completed:</strong> the department marked the request as finished.</li>
-                    </ul>
+                    <h2>Update Request</h2>
+                    <p class="section-note">
+                        Save a status change and leave staff notes so the student can see the latest progress.
+                    </p>
+
+                    <form method="POST" action="{{ route('staff.requests.update', $serviceRequest) }}">
+                        @csrf
+                        @method('PATCH')
+
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <select id="status" name="status" required>
+                                @foreach ($statuses as $status)
+                                    <option value="{{ $status }}" @selected(old('status', $serviceRequest->status) === $status)>
+                                        {{ ucwords(str_replace('_', ' ', $status)) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="staff_notes">Staff Notes</label>
+                            <textarea
+                                id="staff_notes"
+                                name="staff_notes"
+                                placeholder="Write the latest update, actions taken, or what the student should expect next"
+                            >{{ old('staff_notes', $serviceRequest->staff_notes) }}</textarea>
+                            <span class="field-help">Completed requests automatically record the completion timestamp.</span>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="button button-primary">Save Update</button>
+                        </div>
+                    </form>
                 </article>
             </section>
         </div>

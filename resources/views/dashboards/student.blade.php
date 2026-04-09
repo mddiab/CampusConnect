@@ -28,24 +28,23 @@
             <section class="hero-card">
                 <h1>Student Dashboard</h1>
                 <p>
-                    Submit a new request, follow its status, and review your own request history from one place.
-                    The summary cards below separate requests by their current stage so the information is easier to scan.
+                    Submit a new request, track updates from the assigned department, and review your own request history from one place.
                 </p>
 
                 <div class="stat-row">
                     <div class="stat-box">
                         <strong>{{ $pendingRequestCount }}</strong>
-                        <span>Pending requests waiting for staff review.</span>
+                        <span>Pending requests waiting for department review.</span>
                     </div>
 
                     <div class="stat-box">
                         <strong>{{ $inProgressRequestCount }}</strong>
-                        <span>Requests currently being handled by the department.</span>
+                        <span>Requests currently being handled by staff.</span>
                     </div>
 
                     <div class="stat-box">
                         <strong>{{ $completedRequestCount }}</strong>
-                        <span>Requests marked completed by the department.</span>
+                        <span>Requests that have been resolved and marked completed.</span>
                     </div>
                 </div>
             </section>
@@ -56,7 +55,7 @@
                     <ul>
                         <li><a href="#request-form" class="text-link">Submit a new service request.</a></li>
                         <li><a href="#request-history" class="text-link">Review all previously submitted requests.</a></li>
-                        <li>Open any request from the table to check its full details and status.</li>
+                        <li>Open any request to read staff notes, status updates, and attachment details.</li>
                     </ul>
                 </article>
 
@@ -64,14 +63,15 @@
                     <h2>Latest Activity</h2>
 
                     @if ($recentRequests->isEmpty())
-                        <p>No recent activity yet. Once you submit a request, the latest changes will appear here.</p>
+                        <p>No recent activity yet. Once you submit a request, the latest updates will appear here.</p>
                     @else
                         <ul>
                             @foreach ($recentRequests as $serviceRequest)
                                 <li>
                                     <strong>{{ $serviceRequest->title }}</strong><br>
-                                    Current status: {{ $serviceRequest->statusLabel() }}. Last updated
-                                    {{ $serviceRequest->updated_at->diffForHumans() }}.
+                                    {{ $serviceRequest->departmentName() }} /
+                                    {{ $serviceRequest->categoryName() }}.
+                                    Current status: {{ $serviceRequest->statusLabel() }}.
                                 </li>
                             @endforeach
                         </ul>
@@ -81,9 +81,9 @@
                 <article class="mini-card">
                     <h2>Before You Submit</h2>
                     <ul>
+                        <li>Choose the department first so the category list only shows valid options for that team.</li>
                         <li>Use a short title that clearly explains the issue.</li>
-                        <li>Select the department and category that best match the request.</li>
-                        <li>Include the location, date, and any details staff need to respond.</li>
+                        <li>Include location, timing, and any details staff need before they can act.</li>
                     </ul>
                 </article>
             </section>
@@ -92,7 +92,7 @@
                 <article class="panel" id="request-form">
                     <h2>Submit a New Request</h2>
                     <p class="section-note">
-                        Fill in the details below so the correct department can review and process your request.
+                        Fill in the details below so the correct department and category are assigned to the request.
                     </p>
 
                     <form method="POST" action="{{ route('student.requests.store') }}" enctype="multipart/form-data">
@@ -112,25 +112,29 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="department">Department</label>
-                            <select id="department" name="department" required>
+                            <label for="department_id">Department</label>
+                            <select id="department_id" name="department_id" required>
                                 <option value="">Select the department that should handle this request</option>
                                 @foreach ($departments as $department)
-                                    <option value="{{ $department }}" @selected(old('department') === $department)>{{ $department }}</option>
+                                    <option value="{{ $department->id }}" @selected((string) old('department_id') === (string) $department->id)>
+                                        {{ $department->name }}
+                                    </option>
                                 @endforeach
                             </select>
                             <span class="field-help">Choose the office or department responsible for this issue.</span>
                         </div>
 
                         <div class="form-group">
-                            <label for="category">Category</label>
-                            <select id="category" name="category" required>
-                                <option value="">Select the category that best matches the request</option>
-                                @foreach ($categories as $category)
-                                    <option value="{{ $category }}" @selected(old('category') === $category)>{{ $category }}</option>
-                                @endforeach
+                            <label for="service_category_id">Category</label>
+                            <select
+                                id="service_category_id"
+                                name="service_category_id"
+                                data-selected="{{ old('service_category_id') }}"
+                                required
+                            >
+                                <option value="">Select a department first</option>
                             </select>
-                            <span class="field-help">Choose the type of help or service being requested.</span>
+                            <span class="field-help">Only categories that belong to the selected department are shown here.</span>
                         </div>
 
                         <div class="form-group">
@@ -152,7 +156,7 @@
 
                         <div class="form-actions">
                             <button type="submit" class="button button-primary">Submit Request</button>
-                            <span class="muted-text">Your request will be saved with a default status of Pending.</span>
+                            <span class="muted-text">New requests start with a Pending status.</span>
                         </div>
                     </form>
                 </article>
@@ -163,10 +167,10 @@
                         Keep the request direct and specific so staff can understand it quickly.
                     </p>
                     <ul>
+                        <li>The category list depends on the selected department, so choose the department first.</li>
                         <li>The request title should summarize the issue in one short sentence.</li>
-                        <li>The department should match the office that is expected to handle the request.</li>
-                        <li>The description should include exact details, not only one-word statements like "problem".</li>
-                        <li>The attachment is optional and should only be used when a file will help staff understand the issue.</li>
+                        <li>The description should include the exact problem, location, and what support is needed.</li>
+                        <li>The attachment is optional and should only be used when a file helps staff verify the issue.</li>
                     </ul>
                 </article>
             </section>
@@ -202,8 +206,8 @@
                                 @foreach ($serviceRequests as $serviceRequest)
                                     <tr>
                                         <td>{{ $serviceRequest->title }}</td>
-                                        <td>{{ $serviceRequest->department }}</td>
-                                        <td>{{ $serviceRequest->category }}</td>
+                                        <td>{{ $serviceRequest->departmentName() }}</td>
+                                        <td>{{ $serviceRequest->categoryName() }}</td>
                                         <td>
                                             <span class="status-badge {{ $statusClasses[$serviceRequest->status] ?? 'status-pending' }}">
                                                 {{ $serviceRequest->statusLabel() }}
@@ -222,4 +226,49 @@
             </section>
         </div>
     </main>
+
+    <script>
+        (() => {
+            const categoriesByDepartment = @json($categoriesByDepartment);
+            const departmentSelect = document.getElementById('department_id');
+            const categorySelect = document.getElementById('service_category_id');
+
+            if (!departmentSelect || !categorySelect) {
+                return;
+            }
+
+            const renderCategories = (selectedCategoryId = categorySelect.dataset.selected || '') => {
+                const departmentId = departmentSelect.value;
+                const categories = categoriesByDepartment[departmentId] ?? [];
+
+                categorySelect.innerHTML = '';
+
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = departmentId
+                    ? 'Select the category that best matches the request'
+                    : 'Select a department first';
+
+                categorySelect.appendChild(placeholder);
+
+                categories.forEach((category) => {
+                    const option = document.createElement('option');
+                    option.value = String(category.id);
+                    option.textContent = category.name;
+
+                    if (String(category.id) === String(selectedCategoryId)) {
+                        option.selected = true;
+                    }
+
+                    categorySelect.appendChild(option);
+                });
+
+                categorySelect.disabled = categories.length === 0;
+            };
+
+            departmentSelect.addEventListener('change', () => renderCategories(''));
+
+            renderCategories();
+        })();
+    </script>
 @endsection

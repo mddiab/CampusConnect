@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\StaffRequestController;
 use App\Http\Controllers\StudentRequestController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
@@ -14,10 +15,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
-    Route::get('/staff/dashboard', [DashboardController::class, 'staff'])
-        ->middleware('role:staff')
-        ->name('staff.dashboard');
 
     Route::middleware('role:student')->group(function () {
         Route::get('/student/dashboard', [DashboardController::class, 'student'])->name('student.dashboard');
@@ -25,6 +22,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/student/requests/{serviceRequest}', [StudentRequestController::class, 'show'])->name('student.requests.show');
         Route::get('/student/requests/{serviceRequest}/attachment', [StudentRequestController::class, 'download'])
             ->name('student.requests.attachment');
+    });
+
+    Route::middleware('role:staff')->group(function () {
+        Route::get('/staff/dashboard', [StaffRequestController::class, 'index'])->name('staff.dashboard');
+        Route::get('/staff/requests/{serviceRequest}', [StaffRequestController::class, 'show'])->name('staff.requests.show');
+        Route::patch('/staff/requests/{serviceRequest}', [StaffRequestController::class, 'update'])->name('staff.requests.update');
+        Route::get('/staff/requests/{serviceRequest}/attachment', [StaffRequestController::class, 'download'])
+            ->name('staff.requests.attachment');
     });
 });
 
