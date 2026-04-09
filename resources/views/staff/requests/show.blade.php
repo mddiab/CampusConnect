@@ -28,28 +28,30 @@
             <section class="hero-card">
                 <h1>{{ $serviceRequest->title }}</h1>
                 <p>
-                    Review the request details below, download the attachment if needed, and update the request status
-                    for the {{ $serviceRequest->departmentName() }} department.
+                    Review the details, update the status, and save notes for {{ $serviceRequest->departmentName() }}.
                 </p>
 
                 <div class="stat-row">
                     <div class="stat-box">
+                        <span class="stat-kicker">Department</span>
                         <strong class="placeholder-value">{{ $serviceRequest->departmentName() }}</strong>
-                        <span>Department handling the request.</span>
+                        <span>Assigned team</span>
                     </div>
 
                     <div class="stat-box">
+                        <span class="stat-kicker">Category</span>
                         <strong class="placeholder-value">{{ $serviceRequest->categoryName() }}</strong>
-                        <span>Category assigned to the request.</span>
+                        <span>Request type</span>
                     </div>
 
                     <div class="stat-box">
+                        <span class="stat-kicker">Status</span>
                         <strong class="placeholder-value">
                             <span class="status-badge {{ $statusClasses[$serviceRequest->status] ?? 'status-pending' }}">
                                 {{ $serviceRequest->statusLabel() }}
                             </span>
                         </strong>
-                        <span>Current workflow state for this request.</span>
+                        <span>Current state</span>
                     </div>
                 </div>
             </section>
@@ -57,8 +59,8 @@
             <section class="panel-grid">
                 <article class="panel">
                     <div class="panel-header">
-                        <h2>Request Details</h2>
-                        <a href="{{ route('staff.dashboard') }}" class="text-link">Back to Staff Dashboard</a>
+                        <h2>Details</h2>
+                        <a href="{{ route('staff.dashboard') }}" class="text-link">Back to Queue</a>
                     </div>
 
                     <div class="table-wrap">
@@ -106,9 +108,9 @@
                 </article>
 
                 <article class="panel">
-                    <h2>Update Request</h2>
+                    <h2>Update</h2>
                     <p class="section-note">
-                        Save a status change and leave staff notes so the student can see the latest progress.
+                        Save the latest status and notes for the student.
                     </p>
 
                     <form method="POST" action="{{ route('staff.requests.update', $serviceRequest) }}">

@@ -26,9 +26,9 @@
     .compact-select {
         min-height: 44px;
         padding: 0 14px;
-        border: 1px solid var(--border);
+        border: 1px solid var(--line);
         border-radius: 10px;
-        background: #fff;
+        background: var(--bg-field);
         color: var(--text);
     }
 
@@ -58,14 +58,15 @@
     }
 
     .btn-edit {
-        background: #e8efff;
-        color: var(--primary);
+        background: linear-gradient(135deg, rgba(123, 216, 255, 0.22), rgba(125, 127, 255, 0.18));
+        color: var(--text);
+        border-color: rgba(123, 216, 255, 0.22);
     }
 
     .btn-delete {
-        background: #fff1f2;
+        background: linear-gradient(135deg, rgba(255, 157, 176, 0.2), rgba(255, 123, 199, 0.14));
         color: var(--danger);
-        border: 1px solid #f1c7cd;
+        border: 1px solid rgba(255, 157, 176, 0.24);
     }
 
     .section-stack-admin {
@@ -95,9 +96,9 @@
         min-height: 32px;
         padding: 0 12px;
         border-radius: 999px;
-        background: var(--panel-soft);
-        border: 1px solid var(--border);
-        color: var(--primary-dark);
+        background: rgba(15, 23, 58, 0.72);
+        border: 1px solid var(--line);
+        color: var(--muted-strong);
         font-size: 0.92rem;
         font-weight: 700;
     }
@@ -116,9 +117,9 @@
         justify-content: space-between;
         gap: 12px;
         padding: 14px 16px;
-        border: 1px solid var(--border);
+        border: 1px solid var(--line);
         border-radius: 14px;
-        background: #fff;
+        background: rgba(10, 17, 42, 0.74);
     }
 
     .category-item strong {
@@ -143,10 +144,10 @@
 
     .modal-content {
         width: min(520px, 100%);
-        background: var(--panel);
+        background: linear-gradient(180deg, rgba(17, 25, 62, 0.96), rgba(8, 13, 34, 0.96));
         border-radius: 18px;
-        border: 1px solid var(--border);
-        box-shadow: 0 20px 40px rgba(34, 56, 112, 0.2);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow-strong);
         padding: 24px;
         position: relative;
     }
@@ -158,8 +159,8 @@
         min-height: 34px;
         width: 34px;
         border-radius: 999px;
-        background: #fff;
-        border: 1px solid var(--border);
+        background: rgba(11, 18, 43, 0.92);
+        border: 1px solid var(--line);
         color: var(--muted);
     }
 

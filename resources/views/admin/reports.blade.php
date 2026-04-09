@@ -23,9 +23,9 @@
     .report-select {
         min-height: 44px;
         padding: 0 14px;
-        border: 1px solid var(--border);
+        border: 1px solid var(--line);
         border-radius: 10px;
-        background: #fff;
+        background: var(--bg-field);
         color: var(--text);
         min-width: 220px;
     }
@@ -44,9 +44,9 @@
         justify-content: space-between;
         gap: 12px;
         padding: 14px 16px;
-        border: 1px solid var(--border);
+        border: 1px solid var(--line);
         border-radius: 14px;
-        background: #fff;
+        background: rgba(10, 17, 42, 0.74);
     }
 
     .pagination-wrap nav {
@@ -144,7 +144,7 @@
                 </div>
 
                 <div class="pagination-wrap">
-                    {{ $serviceRequests->links() }}
+                    {{ $serviceRequests->links('pagination.galaxy') }}
                 </div>
             </article>
 

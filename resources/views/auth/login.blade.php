@@ -6,23 +6,23 @@
     <main class="auth-shell">
         <div class="auth-grid">
             <section class="auth-hero">
-                <p style="margin: 0 0 14px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">CampusConnect</p>
-                <h1>Login first. Then send each user to the right space.</h1>
+                <p class="eyebrow">CampusConnect</p>
+                <h1>Campus support, with less confusion and a clearer path.</h1>
                 <p>
-                    This first version starts with a simple login page for students, staff, and administrators.
-                    Once a user signs in, CampusConnect redirects them to their own dashboard.
+                    Sign in once and land in the right workspace immediately. Students can submit requests,
+                    staff can review and update them, and admins can manage the whole system from one place.
                 </p>
 
                 <ul>
-                    <li>Students can submit and track service requests.</li>
-                    <li>Staff can review requests and update progress.</li>
-                    <li>Admins can monitor users, departments, and overall activity.</li>
+                    <li>Students get a simple request form, request history, and clear status updates.</li>
+                    <li>Staff get a filtered queue for their department with notes and progress controls.</li>
+                    <li>Admins get user management, category management, and reporting tools.</li>
                 </ul>
             </section>
 
             <section class="auth-card">
-                <h2>Login</h2>
-                <p>Use your account credentials to enter CampusConnect.</p>
+                <h2>Welcome Back</h2>
+                <p>Use a seeded demo account or your own campus credentials to enter the correct dashboard.</p>
 
                 @if ($errors->any())
                     <div class="error-box">

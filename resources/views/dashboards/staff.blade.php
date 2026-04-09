@@ -21,51 +21,43 @@
 
             @if ($department)
                 <section class="hero-card">
-                    <h1>Staff Dashboard</h1>
+                    <h1>{{ $department->name }} Queue</h1>
                     <p>
-                        Review and update service requests assigned to the <strong>{{ $department->name }}</strong> department.
+                        Review, update, and close requests for <strong>{{ $department->name }}</strong>.
                     </p>
 
                     <div class="stat-row">
                         <div class="stat-box">
+                            <span class="stat-kicker">Pending</span>
                             <strong>{{ $pendingRequestCount }}</strong>
-                            <span>Requests waiting for an initial review.</span>
+                            <span>New requests</span>
                         </div>
 
                         <div class="stat-box">
+                            <span class="stat-kicker">In Progress</span>
                             <strong>{{ $inProgressRequestCount }}</strong>
-                            <span>Requests currently being handled by the department.</span>
+                            <span>Active work</span>
                         </div>
 
                         <div class="stat-box">
+                            <span class="stat-kicker">Completed</span>
                             <strong>{{ $completedRequestCount }}</strong>
-                            <span>Requests already resolved by this department.</span>
+                            <span>Closed requests</span>
                         </div>
                     </div>
                 </section>
 
                 <section class="page-grid">
                     <article class="mini-card">
-                        <h2>Staff Actions</h2>
-                        <ul>
-                            <li>Review the newest requests assigned to your department.</li>
-                            <li>Open any request to update its status and leave staff notes.</li>
-                            <li>Download attachments when supporting files are needed for the review.</li>
-                        </ul>
-                    </article>
-
-                    <article class="mini-card">
-                        <h2>Latest Activity</h2>
-
+                        <h2>Recent</h2>
                         @if ($recentRequests->isEmpty())
-                            <p>No requests have been assigned to this department yet.</p>
+                            <p>No requests have been assigned yet.</p>
                         @else
-                            <ul>
+                            <ul class="compact-list">
                                 @foreach ($recentRequests as $serviceRequest)
                                     <li>
-                                        <strong>{{ $serviceRequest->title }}</strong><br>
-                                        {{ $serviceRequest->user->name }} submitted this request under
-                                        {{ $serviceRequest->categoryName() }}.
+                                        <span class="list-title">{{ $serviceRequest->title }}</span>
+                                        <span class="list-meta">{{ $serviceRequest->user->name }} • {{ $serviceRequest->categoryName() }}</span>
                                     </li>
                                 @endforeach
                             </ul>
@@ -73,19 +65,37 @@
                     </article>
 
                     <article class="mini-card">
-                        <h2>Workflow</h2>
+                        <h2>Status Guide</h2>
+                        <div class="status-guide">
+                            <div class="status-guide-row">
+                                <span class="status-badge status-pending">Pending</span>
+                                <span>New and waiting.</span>
+                            </div>
+                            <div class="status-guide-row">
+                                <span class="status-badge status-in-progress">In Progress</span>
+                                <span>Being handled now.</span>
+                            </div>
+                            <div class="status-guide-row">
+                                <span class="status-badge status-completed">Completed</span>
+                                <span>Closed with final notes.</span>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="mini-card">
+                        <h2>Actions</h2>
                         <ul>
-                            <li>Pending requests are newly submitted and waiting for review.</li>
-                            <li>In Progress requests are actively being handled by department staff.</li>
-                            <li>Completed requests should include final notes before closure.</li>
+                            <li>Open a request.</li>
+                            <li>Update status and notes.</li>
+                            <li>Download attachments if needed.</li>
                         </ul>
                     </article>
                 </section>
 
                 <section class="panel" style="margin-top: 22px;">
                     <div class="panel-header">
-                        <h2>Department Request Queue</h2>
-                        <span>{{ $filteredRequestCount }} visible</span>
+                        <h2>Request Queue</h2>
+                        <span>{{ $filteredRequestCount }} requests</span>
                     </div>
 
                     <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px;">
@@ -108,18 +118,18 @@
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Title</th>
+                                        <th>Request</th>
                                         <th>Student</th>
                                         <th>Category</th>
                                         <th>Status</th>
-                                        <th>Submitted</th>
-                                        <th>Action</th>
+                                        <th>Date</th>
+                                        <th>Open</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($serviceRequests as $serviceRequest)
                                         <tr>
-                                            <td>{{ $serviceRequest->title }}</td>
+                                            <td><span class="list-title">{{ $serviceRequest->title }}</span></td>
                                             <td>{{ $serviceRequest->user->name }}</td>
                                             <td>{{ $serviceRequest->categoryName() }}</td>
                                             <td>
@@ -129,7 +139,7 @@
                                             </td>
                                             <td>{{ $serviceRequest->created_at->format('M d, Y') }}</td>
                                             <td>
-                                                <a href="{{ route('staff.requests.show', $serviceRequest) }}" class="text-link">Review Request</a>
+                                                <a href="{{ route('staff.requests.show', $serviceRequest) }}" class="text-link">Open</a>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -142,8 +152,7 @@
                 <section class="hero-card">
                     <h1>Staff Dashboard</h1>
                     <p>
-                        Your account does not have a department assignment yet. An administrator needs to assign a department
-                        before you can review or update service requests.
+                        Your account does not have a department yet. An administrator must assign one before you can review requests.
                     </p>
                 </section>
             @endif
