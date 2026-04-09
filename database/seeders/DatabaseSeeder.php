@@ -254,6 +254,11 @@ class DatabaseSeeder extends Seeder
             ],
         ];
 
+        $requestDefinitions = [
+            ...$requestDefinitions,
+            ...$this->generatedRequestDefinitions(array_keys($students)),
+        ];
+
         foreach ($requestDefinitions as $definition) {
             $student = $students[$definition['student_email']];
             $category = $categories[$definition['category']];
@@ -283,5 +288,139 @@ class DatabaseSeeder extends Seeder
             ->where('name', $categoryName)
             ->whereHas('department', fn ($query) => $query->where('name', $departmentName))
             ->firstOrFail();
+    }
+
+    /**
+     * @param array<int, string> $studentEmails
+     * @return array<int, array<string, string>>
+     */
+    private function generatedRequestDefinitions(array $studentEmails): array
+    {
+        $templates = [
+            [
+                'category' => 'it.support',
+                'subject' => 'Wi-Fi dead zone near the science wing',
+                'location' => 'the second-floor science hallway',
+                'need' => 'a network access point check before next week\'s labs',
+            ],
+            [
+                'category' => 'it.inquiry',
+                'subject' => 'Learning portal not loading course announcements',
+                'location' => 'the student portal dashboard',
+                'need' => 'a review of the account sync and portal cache',
+            ],
+            [
+                'category' => 'maintenance.facility',
+                'subject' => 'Leaking sink in the student lounge restroom',
+                'location' => 'the ground-floor restroom beside the student lounge',
+                'need' => 'a plumbing repair and cleanup check',
+            ],
+            [
+                'category' => 'maintenance.inquiry',
+                'subject' => 'Need additional chairs for an evening review session',
+                'location' => 'the seminar room in Building C',
+                'need' => 'temporary furniture support before the scheduled session',
+            ],
+            [
+                'category' => 'registrar.registration',
+                'subject' => 'Course registration record still shows waitlist status',
+                'location' => 'the online registration system',
+                'need' => 'verification that the enrollment change was processed correctly',
+            ],
+            [
+                'category' => 'registrar.document',
+                'subject' => 'Enrollment certificate request for embassy paperwork',
+                'location' => 'the document request workflow',
+                'need' => 'confirmation of the release timeline and pickup steps',
+            ],
+            [
+                'category' => 'finance.payment',
+                'subject' => 'Installment payment page times out before confirmation',
+                'location' => 'the tuition payment page',
+                'need' => 'an investigation into the payment processing error',
+            ],
+            [
+                'category' => 'finance.inquiry',
+                'subject' => 'Scholarship balance not reflected on account summary',
+                'location' => 'the student finance ledger',
+                'need' => 'a review of the posted scholarship credit',
+            ],
+            [
+                'category' => 'library.document',
+                'subject' => 'Request for a missing journal article scan',
+                'location' => 'the digital resources request desk',
+                'need' => 'help locating or scanning the material for class research',
+            ],
+            [
+                'category' => 'library.inquiry',
+                'subject' => 'Borrowed item renewal blocked despite no active fines',
+                'location' => 'the library renewal screen',
+                'need' => 'a check of the borrowing restrictions on the account',
+            ],
+            [
+                'category' => 'student-affairs.inquiry',
+                'subject' => 'Need guidance about event approval paperwork',
+                'location' => 'the student activities approval process',
+                'need' => 'clarification on the remaining forms and required signatures',
+            ],
+        ];
+
+        $timePhrases = [
+            'before the next lecture block',
+            'before the end of this week',
+            'as soon as possible for an upcoming deadline',
+            'before the next assessment window',
+            'ahead of the department review meeting',
+        ];
+
+        $statusCycle = [
+            ServiceRequest::STATUS_PENDING,
+            ServiceRequest::STATUS_IN_PROGRESS,
+            ServiceRequest::STATUS_COMPLETED,
+            ServiceRequest::STATUS_PENDING,
+            ServiceRequest::STATUS_IN_PROGRESS,
+        ];
+
+        $generated = [];
+
+        for ($i = 1; $i <= 85; $i++) {
+            $template = $templates[($i - 1) % count($templates)];
+            $studentEmail = $studentEmails[($i - 1) % count($studentEmails)];
+            $status = $statusCycle[($i - 1) % count($statusCycle)];
+            $timePhrase = $timePhrases[($i - 1) % count($timePhrases)];
+
+            $generated[] = [
+                'student_email' => $studentEmail,
+                'title' => $template['subject'].' #'.str_pad((string) $i, 3, '0', STR_PAD_LEFT),
+                'category' => $template['category'],
+                'description' => 'This request concerns '.$template['location'].'. The student needs '.$template['need'].' '.$timePhrase.'.',
+                'status' => $status,
+                'staff_notes' => $this->staffNotesForStatus($status, $template['category']),
+            ];
+        }
+
+        return $generated;
+    }
+
+    private function staffNotesForStatus(string $status, string $categoryKey): ?string
+    {
+        if ($status === ServiceRequest::STATUS_PENDING) {
+            return null;
+        }
+
+        $departmentLabel = match (explode('.', $categoryKey)[0]) {
+            'it' => 'IT',
+            'maintenance' => 'Maintenance',
+            'registrar' => 'Registrar',
+            'finance' => 'Finance',
+            'library' => 'Library',
+            default => 'Student Affairs',
+        };
+
+        if ($status === ServiceRequest::STATUS_IN_PROGRESS) {
+            return $departmentLabel.' staff has reviewed the request and is currently working on the next action.';
+        }
+
+        return $departmentLabel.' staff completed the request and recorded the final update for the student.';
     }
 }

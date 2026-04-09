@@ -54,7 +54,14 @@ class DatabaseSeederTest extends TestCase
         ]);
 
         $this->assertGreaterThanOrEqual(11, ServiceCategory::query()->count());
-        $this->assertGreaterThanOrEqual(15, ServiceRequest::query()->count());
+        $this->assertGreaterThanOrEqual(100, ServiceRequest::query()->count());
+        $this->assertSame(
+            10,
+            ServiceRequest::query()
+                ->select('user_id')
+                ->distinct()
+                ->count('user_id')
+        );
 
         $request = ServiceRequest::query()
             ->where('title', 'Internet connection problem in Building A classroom')
