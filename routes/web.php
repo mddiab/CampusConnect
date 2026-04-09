@@ -34,30 +34,24 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
-
-    // Admin Dashboard
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])
         ->name('admin.dashboard');
 
-    // --- User Management Routes (For the Modals) ---
+    Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
     Route::post('/admin/users', [AdminController::class, 'storeUser'])->name('admin.users.store');
     Route::put('/admin/users/{user}', [AdminController::class, 'updateUser'])->name('admin.users.update');
     Route::delete('/admin/users/{user}', [AdminController::class, 'destroyUser'])->name('admin.users.destroy');
 
-    // --- Placeholders ---
-    Route::get('/admin/users', function () {
-        return 'Users Page Coming Soon';
-    })->name('admin.users');
+    Route::get('/admin/departments', [AdminController::class, 'departments'])->name('admin.departments');
+    Route::post('/admin/departments', [AdminController::class, 'storeDepartment'])->name('admin.departments.store');
+    Route::put('/admin/departments/{department}', [AdminController::class, 'updateDepartment'])->name('admin.departments.update');
+    Route::delete('/admin/departments/{department}', [AdminController::class, 'destroyDepartment'])->name('admin.departments.destroy');
 
-    Route::get('/admin/departments', function () {
-        return 'Departments Page Coming Soon';
-    })->name('admin.departments');
+    Route::get('/admin/categories', [AdminController::class, 'categories'])->name('admin.categories');
+    Route::post('/admin/categories', [AdminController::class, 'storeCategory'])->name('admin.categories.store');
+    Route::put('/admin/categories/{serviceCategory}', [AdminController::class, 'updateCategory'])->name('admin.categories.update');
+    Route::delete('/admin/categories/{serviceCategory}', [AdminController::class, 'destroyCategory'])->name('admin.categories.destroy');
 
-    Route::get('/admin/categories', function () {
-        return 'Categories Page Coming Soon';
-    })->name('admin.categories');
-
-    Route::get('/admin/reports', function () {
-        return 'Reports Page Coming Soon';
-    })->name('admin.reports');
+    Route::get('/admin/reports', [AdminController::class, 'reports'])->name('admin.reports');
+    Route::get('/admin/reports/export', [AdminController::class, 'exportReports'])->name('admin.reports.export');
 });

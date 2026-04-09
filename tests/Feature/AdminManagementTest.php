@@ -1,0 +1,137 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Department;
+use App\Models\ServiceCategory;
+use App\Models\ServiceRequest;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class AdminManagementTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_admin_can_create_a_department(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $response = $this
+            ->actingAs($admin)
+            ->post(route('admin.departments.store'), [
+                'name' => 'Health Services',
+            ]);
+
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('departments', [
+            'name' => 'Health Services',
+        ]);
+    }
+
+    public function test_admin_can_create_a_service_category(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $department = Department::query()
+            ->where('name', 'Finance')
+            ->firstOrFail();
+
+        $response = $this
+            ->actingAs($admin)
+            ->post(route('admin.categories.store'), [
+                'department_id' => $department->id,
+                'name' => 'Refund Request',
+            ]);
+
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('service_categories', [
+            'department_id' => $department->id,
+            'name' => 'Refund Request',
+        ]);
+    }
+
+    public function test_admin_cannot_delete_a_category_that_is_still_used_by_requests(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $department = Department::query()
+            ->where('name', 'Information Technology')
+            ->firstOrFail();
+
+        $category = ServiceCategory::query()
+            ->where('name', 'Technical Support')
+            ->where('department_id', $department->id)
+            ->firstOrFail();
+
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+            'service_category_id' => $category->id,
+        ]);
+
+        $response = $this
+            ->actingAs($admin)
+            ->delete(route('admin.categories.destroy', $category));
+
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('service_categories', [
+            'id' => $category->id,
+        ]);
+    }
+
+    public function test_admin_reports_page_loads_and_can_export_csv(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        $department = Department::query()
+            ->where('name', 'Finance')
+            ->firstOrFail();
+
+        $category = ServiceCategory::query()
+            ->where('name', 'Payment')
+            ->where('department_id', $department->id)
+            ->firstOrFail();
+
+        $serviceRequest = ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+            'service_category_id' => $category->id,
+            'title' => 'Payment gateway timeout issue',
+        ]);
+
+        $pageResponse = $this
+            ->actingAs($admin)
+            ->get(route('admin.reports'));
+
+        $pageResponse
+            ->assertOk()
+            ->assertSee('Reports')
+            ->assertSee('Payment gateway timeout issue');
+
+        $exportResponse = $this
+            ->actingAs($admin)
+            ->get(route('admin.reports.export'));
+
+        $exportResponse->assertOk();
+        $exportResponse->assertHeader('content-type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString($serviceRequest->title, $exportResponse->streamedContent());
+    }
+}

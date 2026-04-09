@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Department;
+use App\Models\ServiceCategory;
 use App\Models\ServiceRequest;
+use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -31,6 +33,28 @@ class DatabaseSeederTest extends TestCase
             'email' => 'staff@campusconnect.test',
             'department_id' => $informationTechnology->id,
         ]);
+
+        $this->assertSame(10, User::query()->where('role', User::ROLE_STUDENT)->count());
+        $this->assertSame(6, User::query()->where('role', User::ROLE_STAFF)->count());
+        $this->assertSame(3, User::query()->where('role', User::ROLE_ADMIN)->count());
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'student10@campusconnect.test',
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'admin3@campusconnect.test',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'staff.finance@campusconnect.test',
+            'role' => User::ROLE_STAFF,
+        ]);
+
+        $this->assertGreaterThanOrEqual(11, ServiceCategory::query()->count());
+        $this->assertGreaterThanOrEqual(15, ServiceRequest::query()->count());
 
         $request = ServiceRequest::query()
             ->where('title', 'Internet connection problem in Building A classroom')

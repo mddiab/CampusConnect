@@ -69,9 +69,10 @@
 
                 <div class="demo-box">
                     <h3>Demo Accounts</h3>
-                    <p><strong>Student:</strong> student@campusconnect.test / password</p>
-                    <p><strong>Staff:</strong> staff@campusconnect.test / password</p>
-                    <p><strong>Admin:</strong> admin@campusconnect.test / password</p>
+                    <p><strong>Student sample:</strong> student@campusconnect.test / password</p>
+                    <p><strong>Staff sample:</strong> staff@campusconnect.test / password</p>
+                    <p><strong>Admin sample:</strong> admin@campusconnect.test / password</p>
+                    <p>Additional seeded users include student2-student10, admin2-admin3, and one staff account for every department.</p>
                 </div>
             </section>
         </div>

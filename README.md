@@ -9,6 +9,8 @@ The current implementation supports:
 - staff request queues scoped to the staff member's department
 - staff status updates and staff notes
 - admin user management with department assignment for staff accounts
+- admin department and service-category CRUD
+- admin reporting with filtered request views and CSV export
 - seeded reference data for departments, service categories, demo accounts, and demo requests
 
 ## Stack
@@ -45,7 +47,10 @@ The current implementation supports:
 - can search users
 - can create, update, and delete users
 - can assign departments to staff accounts
-- can review departments, service categories, and recent request activity
+- can create, update, and delete departments
+- can create, update, and delete service categories
+- can review recent request activity
+- can open filtered reports and export request data as CSV
 
 ## Application Flow
 
@@ -128,13 +133,20 @@ tests/
 | Method | URI | Name | Action | Middleware |
 | --- | --- | --- | --- | --- |
 | `GET` | `/admin/dashboard` | `admin.dashboard` | `AdminController@dashboard` | `web`, `auth`, `role:admin` |
+| `GET` | `/admin/users` | `admin.users` | `AdminController@users` | `web`, `auth`, `role:admin` |
 | `POST` | `/admin/users` | `admin.users.store` | `AdminController@storeUser` | `web`, `auth`, `role:admin` |
 | `PUT` | `/admin/users/{user}` | `admin.users.update` | `AdminController@updateUser` | `web`, `auth`, `role:admin` |
 | `DELETE` | `/admin/users/{user}` | `admin.users.destroy` | `AdminController@destroyUser` | `web`, `auth`, `role:admin` |
-| `GET` | `/admin/users` | `admin.users` | placeholder closure | `web`, `auth`, `role:admin` |
-| `GET` | `/admin/departments` | `admin.departments` | placeholder closure | `web`, `auth`, `role:admin` |
-| `GET` | `/admin/categories` | `admin.categories` | placeholder closure | `web`, `auth`, `role:admin` |
-| `GET` | `/admin/reports` | `admin.reports` | placeholder closure | `web`, `auth`, `role:admin` |
+| `GET` | `/admin/departments` | `admin.departments` | `AdminController@departments` | `web`, `auth`, `role:admin` |
+| `POST` | `/admin/departments` | `admin.departments.store` | `AdminController@storeDepartment` | `web`, `auth`, `role:admin` |
+| `PUT` | `/admin/departments/{department}` | `admin.departments.update` | `AdminController@updateDepartment` | `web`, `auth`, `role:admin` |
+| `DELETE` | `/admin/departments/{department}` | `admin.departments.destroy` | `AdminController@destroyDepartment` | `web`, `auth`, `role:admin` |
+| `GET` | `/admin/categories` | `admin.categories` | `AdminController@categories` | `web`, `auth`, `role:admin` |
+| `POST` | `/admin/categories` | `admin.categories.store` | `AdminController@storeCategory` | `web`, `auth`, `role:admin` |
+| `PUT` | `/admin/categories/{serviceCategory}` | `admin.categories.update` | `AdminController@updateCategory` | `web`, `auth`, `role:admin` |
+| `DELETE` | `/admin/categories/{serviceCategory}` | `admin.categories.destroy` | `AdminController@destroyCategory` | `web`, `auth`, `role:admin` |
+| `GET` | `/admin/reports` | `admin.reports` | `AdminController@reports` | `web`, `auth`, `role:admin` |
+| `GET` | `/admin/reports/export` | `admin.reports.export` | `AdminController@exportReports` | `web`, `auth`, `role:admin` |
 
 ### Framework Routes
 
@@ -190,6 +202,11 @@ tests/
 - loads departments with categories and user counts
 - loads recent service-request activity with relational department/category data
 - creates and updates staff users with `department_id`
+- redirects `/admin/users`, `/admin/departments`, and `/admin/categories` to the relevant live dashboard sections
+- creates, updates, and deletes departments
+- creates, updates, and deletes service categories
+- prevents unsafe deletes when records are still in use
+- renders the reports page and exports filtered request data as CSV
 
 ## Middleware
 
@@ -302,6 +319,7 @@ Important behavior:
 ### Admin
 
 - `resources/views/dashboards/admin.blade.php`
+- `resources/views/admin/reports.blade.php`
 
 ### Shared
 
@@ -400,11 +418,25 @@ The repo also includes Laravel's default operational tables:
 
 ### Demo Accounts
 
+Seeded user totals:
+
+- 10 students
+- 6 staff members, one for each department
+- 3 admins
+
+Primary sample logins:
+
 | Role | Email | Password | Department |
 | --- | --- | --- | --- |
 | Student | `student@campusconnect.test` | `password` | none |
 | Staff | `staff@campusconnect.test` | `password` | Information Technology |
 | Admin | `admin@campusconnect.test` | `password` | none |
+
+Additional seeded accounts include:
+
+- students: `student2@campusconnect.test` through `student10@campusconnect.test`
+- staff: `staff.maintenance@campusconnect.test`, `staff.registrar@campusconnect.test`, `staff.finance@campusconnect.test`, `staff.library@campusconnect.test`, `staff.affairs@campusconnect.test`
+- admins: `admin2@campusconnect.test`, `admin3@campusconnect.test`
 
 ### Demo Requests
 
@@ -421,6 +453,8 @@ Feature coverage includes:
 - staff department scoping
 - staff request updates
 - staff attachment download
+- admin department/category management
+- admin report export
 - seeder integrity
 - admin dashboard rendering
 
@@ -442,10 +476,10 @@ php artisan db:seed
 composer dev
 ```
 
-## Remaining Gaps
+## Notes
 
-The main remaining incomplete areas are:
+The core workflow is now functional across all three roles. The remaining work, if desired, is mostly product polish rather than missing core behavior:
 
-1. department and service-category CRUD in the admin dashboard are still placeholder actions
-2. admin placeholder routes still return simple placeholder text instead of dedicated pages
-3. the UI is Blade-driven and functional, but not yet decomposed into reusable components
+1. split the large Blade pages into smaller partials or components
+2. add richer audit/reporting views beyond the current CSV export
+3. add email or notification hooks when request statuses change
