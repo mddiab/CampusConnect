@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'user_id',
@@ -77,6 +78,11 @@ class ServiceRequest extends Model
         return $this->belongsTo(ServiceCategory::class);
     }
 
+    public function messages(): HasMany
+    {
+        return $this->hasMany(ServiceRequestMessage::class);
+    }
+
     /**
      * Get the attributes that should be cast.
      *
@@ -127,5 +133,24 @@ class ServiceRequest extends Model
         return $user->role === User::ROLE_STAFF
             && $user->department_id !== null
             && $this->department_id === $user->department_id;
+    }
+
+    public function canBeViewedBy(User $user): bool
+    {
+        return match ($user->role) {
+            User::ROLE_ADMIN => true,
+            User::ROLE_STUDENT => $this->user_id === $user->id,
+            default => $this->canBeManagedBy($user),
+        };
+    }
+
+    public function addMessageFrom(User $user, string $message): ServiceRequestMessage
+    {
+        return $this->messages()->create([
+            'user_id' => $user->id,
+            'author_name' => $user->name,
+            'author_role' => $user->role,
+            'message' => $message,
+        ]);
     }
 }

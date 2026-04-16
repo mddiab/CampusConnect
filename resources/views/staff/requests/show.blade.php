@@ -6,6 +6,12 @@
         'in_progress' => 'status-in-progress',
         'completed' => 'status-completed',
     ];
+
+    $messageClasses = [
+        'student' => 'timeline-item-student',
+        'staff' => 'timeline-item-staff',
+        'admin' => 'timeline-item-admin',
+    ];
 @endphp
 
 @section('title', 'Review Request')
@@ -28,7 +34,7 @@
             <section class="hero-card">
                 <h1>{{ $serviceRequest->title }}</h1>
                 <p>
-                    Review the details, update the status, and save notes for {{ $serviceRequest->departmentName() }}.
+                    Review the details, update the status, and reply in the request conversation for {{ $serviceRequest->departmentName() }}.
                 </p>
 
                 <div class="stat-row">
@@ -143,6 +149,58 @@
                         </div>
                     </form>
                 </article>
+            </section>
+
+            <section class="panel" style="margin-top: 22px;">
+                <div class="panel-header">
+                    <h2>Request Conversation</h2>
+                    <span>{{ $serviceRequest->messages->count() }} replies</span>
+                </div>
+
+                <p class="section-note">
+                    Post updates here when you need to ask the student for clarification or give progress information outside the status field.
+                </p>
+
+                @if ($serviceRequest->messages->isEmpty())
+                    <div class="empty-state">
+                        No conversation replies have been posted yet. Add the first reply below to start the thread with the student.
+                    </div>
+                @else
+                    <div class="timeline">
+                        @foreach ($serviceRequest->messages as $message)
+                            <article class="timeline-item {{ $messageClasses[$message->author_role] ?? 'timeline-item-student' }}">
+                                <div class="timeline-item-header">
+                                    <div>
+                                        <span class="timeline-author">{{ $message->author_name }}</span>
+                                        <span class="timeline-role">{{ $message->roleLabel() }}</span>
+                                    </div>
+                                    <span class="timeline-time">{{ $message->created_at->format('M d, Y h:i A') }}</span>
+                                </div>
+
+                                <p class="timeline-message">{{ $message->message }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('staff.requests.messages.store', $serviceRequest) }}">
+                    @csrf
+
+                    <div class="form-group">
+                        <label for="message">Add Reply</label>
+                        <textarea
+                            id="message"
+                            name="message"
+                            placeholder="Share a progress update, ask the student a question, or note the next action you need from them"
+                            required
+                        >{{ old('message') }}</textarea>
+                        <span class="field-help">Use the status selector above for workflow changes and this conversation for back-and-forth updates.</span>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="button button-primary">Post Reply</button>
+                    </div>
+                </form>
             </section>
         </div>
     </main>

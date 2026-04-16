@@ -23,7 +23,15 @@ class DatabaseSeeder extends Seeder
         $students = $this->seedStudents();
         $this->seedStaff($categories);
         $this->seedAdmins();
-        $this->seedRequests($students, $categories);
+        $this->seedRequests(
+            $students,
+            $categories,
+            User::query()
+                ->where('role', User::ROLE_STAFF)
+                ->get()
+                ->keyBy('department_id')
+                ->all(),
+        );
     }
 
     /**
@@ -135,8 +143,9 @@ class DatabaseSeeder extends Seeder
     /**
      * @param array<string, User> $students
      * @param array<string, ServiceCategory> $categories
+     * @param array<int, User> $staffByDepartment
      */
-    private function seedRequests(array $students, array $categories): void
+    private function seedRequests(array $students, array $categories, array $staffByDepartment): void
     {
         ServiceRequest::query()
             ->whereIn('user_id', array_map(fn (User $student) => $student->id, $students))
@@ -267,7 +276,7 @@ class DatabaseSeeder extends Seeder
             $student = $students[$definition['student_email']];
             $category = $categories[$definition['category']];
 
-            ServiceRequest::query()->updateOrCreate(
+            $serviceRequest = ServiceRequest::query()->updateOrCreate(
                 [
                     'user_id' => $student->id,
                     'title' => $definition['title'],
@@ -282,6 +291,12 @@ class DatabaseSeeder extends Seeder
                     'attachment_path' => null,
                     'attachment_original_name' => null,
                 ],
+            );
+
+            $this->seedConversationMessages(
+                $serviceRequest,
+                $student,
+                $staffByDepartment[$category->department_id] ?? null,
             );
         }
     }
@@ -736,5 +751,40 @@ class DatabaseSeeder extends Seeder
         }
 
         return $departmentLabel.' staff completed the request and recorded the final update for the student.';
+    }
+
+    private function seedConversationMessages(ServiceRequest $serviceRequest, User $student, ?User $staff): void
+    {
+        if ($staff === null || $serviceRequest->status === ServiceRequest::STATUS_PENDING) {
+            return;
+        }
+
+        $messages = [
+            [
+                'user_id' => $student->id,
+                'author_name' => $student->name,
+                'author_role' => $student->role,
+                'message' => 'Following up on this request. Please let me know if you need any extra details from me.',
+            ],
+            [
+                'user_id' => $staff->id,
+                'author_name' => $staff->name,
+                'author_role' => $staff->role,
+                'message' => $serviceRequest->status === ServiceRequest::STATUS_COMPLETED
+                    ? 'The department has finished the request and recorded the final outcome above.'
+                    : 'The department has reviewed the issue and is working on the next step now.',
+            ],
+        ];
+
+        if ($serviceRequest->status === ServiceRequest::STATUS_COMPLETED) {
+            $messages[] = [
+                'user_id' => $student->id,
+                'author_name' => $student->name,
+                'author_role' => $student->role,
+                'message' => 'Thank you for the update and the completed request.',
+            ];
+        }
+
+        $serviceRequest->messages()->createMany($messages);
     }
 }

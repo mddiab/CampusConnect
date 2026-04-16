@@ -59,18 +59,38 @@ class StudentRequestController extends Controller
 
     public function show(Request $request, ServiceRequest $serviceRequest): View
     {
-        abort_unless($serviceRequest->user_id === $request->user()->id, 403);
+        abort_unless($serviceRequest->canBeViewedBy($request->user()), 403);
 
-        $serviceRequest->loadMissing(['user', 'department', 'serviceCategory']);
+        $serviceRequest->loadMissing([
+            'user',
+            'department',
+            'serviceCategory',
+            'messages' => fn ($query) => $query->oldest(),
+        ]);
 
         return view('students.requests.show', [
             'serviceRequest' => $serviceRequest,
         ]);
     }
 
+    public function storeMessage(Request $request, ServiceRequest $serviceRequest): RedirectResponse
+    {
+        abort_unless($serviceRequest->canBeViewedBy($request->user()), 403);
+
+        $validated = $request->validate([
+            'message' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $serviceRequest->addMessageFrom($request->user(), $validated['message']);
+
+        return redirect()
+            ->route('student.requests.show', $serviceRequest)
+            ->with('status', 'Your reply was posted to the request conversation.');
+    }
+
     public function download(Request $request, ServiceRequest $serviceRequest): StreamedResponse
     {
-        abort_unless($serviceRequest->user_id === $request->user()->id, 403);
+        abort_unless($serviceRequest->canBeViewedBy($request->user()), 403);
         abort_unless($serviceRequest->attachment_path, 404);
         abort_unless(Storage::exists($serviceRequest->attachment_path), 404);
 

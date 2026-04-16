@@ -20,6 +20,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/student/dashboard', [DashboardController::class, 'student'])->name('student.dashboard');
         Route::post('/student/requests', [StudentRequestController::class, 'store'])->name('student.requests.store');
         Route::get('/student/requests/{serviceRequest}', [StudentRequestController::class, 'show'])->name('student.requests.show');
+        Route::post('/student/requests/{serviceRequest}/messages', [StudentRequestController::class, 'storeMessage'])
+            ->name('student.requests.messages.store');
         Route::get('/student/requests/{serviceRequest}/attachment', [StudentRequestController::class, 'download'])
             ->name('student.requests.attachment');
     });
@@ -27,6 +29,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:staff')->group(function () {
         Route::get('/staff/dashboard', [StaffRequestController::class, 'index'])->name('staff.dashboard');
         Route::get('/staff/requests/{serviceRequest}', [StaffRequestController::class, 'show'])->name('staff.requests.show');
+        Route::post('/staff/requests/{serviceRequest}/messages', [StaffRequestController::class, 'storeMessage'])
+            ->name('staff.requests.messages.store');
         Route::patch('/staff/requests/{serviceRequest}', [StaffRequestController::class, 'update'])->name('staff.requests.update');
         Route::get('/staff/requests/{serviceRequest}/attachment', [StaffRequestController::class, 'download'])
             ->name('staff.requests.attachment');

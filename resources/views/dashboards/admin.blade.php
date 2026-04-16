@@ -58,15 +58,15 @@
     }
 
     .btn-edit {
-        background: linear-gradient(135deg, rgba(123, 216, 255, 0.22), rgba(125, 127, 255, 0.18));
-        color: var(--text);
-        border-color: rgba(123, 216, 255, 0.22);
+        background: linear-gradient(135deg, rgba(95, 67, 167, 0.12), rgba(142, 181, 232, 0.12));
+        color: var(--primary);
+        border-color: rgba(95, 67, 167, 0.18);
     }
 
     .btn-delete {
-        background: linear-gradient(135deg, rgba(255, 157, 176, 0.2), rgba(255, 123, 199, 0.14));
+        background: linear-gradient(135deg, rgba(187, 88, 117, 0.12), rgba(187, 88, 117, 0.06));
         color: var(--danger);
-        border: 1px solid rgba(255, 157, 176, 0.24);
+        border: 1px solid rgba(187, 88, 117, 0.18);
     }
 
     .section-stack-admin {
@@ -96,7 +96,7 @@
         min-height: 32px;
         padding: 0 12px;
         border-radius: 999px;
-        background: rgba(15, 23, 58, 0.72);
+        background: rgba(246, 241, 252, 0.92);
         border: 1px solid var(--line);
         color: var(--muted-strong);
         font-size: 0.92rem;
@@ -119,7 +119,7 @@
         padding: 14px 16px;
         border: 1px solid var(--line);
         border-radius: 14px;
-        background: rgba(10, 17, 42, 0.74);
+        background: rgba(255, 255, 255, 0.96);
     }
 
     .category-item strong {
@@ -127,50 +127,176 @@
         color: var(--text);
     }
 
+    .admin-dashboard-page {
+        position: relative;
+    }
+
+    .admin-dashboard-page > .container {
+        transition: filter 220ms ease, transform 220ms ease, opacity 220ms ease;
+    }
+
+    .admin-dashboard-page.modal-open > .container {
+        filter: blur(11px);
+        transform: scale(0.985);
+        opacity: 0.9;
+    }
+
     .modal {
-        display: none;
         position: fixed;
         inset: 0;
         z-index: 1000;
-        background: rgba(0, 0, 0, 0.5);
+        display: flex;
         align-items: center;
         justify-content: center;
-        padding: 18px;
+        padding: 28px 20px;
+        background: rgba(95, 67, 167, 0.08);
+        backdrop-filter: blur(18px) saturate(135%);
+        -webkit-backdrop-filter: blur(18px) saturate(135%);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 220ms ease, visibility 0ms linear 220ms;
+    }
+
+    .modal::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(circle at 20% 18%, rgba(95, 67, 167, 0.12), transparent 28%),
+            radial-gradient(circle at 80% 22%, rgba(142, 181, 232, 0.16), transparent 28%),
+            radial-gradient(circle at 50% 100%, rgba(113, 88, 187, 0.1), transparent 36%);
+        pointer-events: none;
     }
 
     .modal.active {
-        display: flex;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transition-delay: 0s;
     }
 
     .modal-content {
-        width: min(520px, 100%);
-        background: linear-gradient(180deg, rgba(17, 25, 62, 0.96), rgba(8, 13, 34, 0.96));
-        border-radius: 18px;
-        border: 1px solid var(--line);
-        box-shadow: var(--shadow-strong);
-        padding: 24px;
         position: relative;
+        width: min(580px, 100%);
+        max-height: min(88vh, 860px);
+        overflow: auto;
+        display: grid;
+        gap: 22px;
+        padding: 30px;
+        border-radius: 28px;
+        border: 1px solid rgba(95, 67, 167, 0.16);
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 241, 252, 0.98)),
+            linear-gradient(135deg, rgba(95, 67, 167, 0.04), transparent 45%, rgba(142, 181, 232, 0.05));
+        box-shadow:
+            0 34px 84px rgba(63, 40, 111, 0.16),
+            inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        transform: translateY(18px) scale(0.98);
+        opacity: 0;
+        transition: transform 240ms ease, opacity 240ms ease;
+    }
+
+    .modal.active .modal-content {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+
+    .modal-content::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(95, 67, 167, 0.18), transparent 38%, transparent 62%, rgba(142, 181, 232, 0.18));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .modal-header {
+        position: relative;
+        padding-right: 56px;
+    }
+
+    .modal-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 12px;
+        color: var(--primary);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+    }
+
+    .modal-kicker::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        box-shadow: 0 0 14px rgba(95, 67, 167, 0.18);
+    }
+
+    .modal-content h2 {
+        margin: 0;
+        color: var(--text);
+        font-size: clamp(1.55rem, 2vw, 1.9rem);
+    }
+
+    .modal-copy {
+        margin: 10px 0 0;
+        max-width: 42ch;
+        color: var(--muted);
+        line-height: 1.75;
+    }
+
+    .modal-form {
+        display: grid;
+        gap: 16px;
+    }
+
+    .modal-form .form-group + .form-group {
+        margin-top: 0;
+    }
+
+    .modal-form .form-group {
+        display: grid;
+        gap: 8px;
+    }
+
+    .modal-submit {
+        margin-top: 6px;
     }
 
     .close-modal {
         position: absolute;
-        top: 16px;
-        right: 16px;
-        min-height: 34px;
-        width: 34px;
+        top: 0;
+        right: 0;
+        min-height: 42px;
+        width: 42px;
         border-radius: 999px;
-        background: rgba(11, 18, 43, 0.92);
-        border: 1px solid var(--line);
-        color: var(--muted);
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(95, 67, 167, 0.14);
+        color: var(--muted-strong);
+        box-shadow: 0 12px 28px rgba(63, 40, 111, 0.1);
     }
 
-    .modal-content h2 {
-        margin: 0 0 18px;
-        color: var(--primary);
+    .close-modal:hover {
+        border-color: rgba(95, 67, 167, 0.26);
+        color: var(--text);
+        background: #f7f2fd;
     }
 
     .w-full {
         width: 100%;
+    }
+
+    body.modal-open {
+        overflow: hidden;
     }
 
     @media (max-width: 720px) {
@@ -178,10 +304,24 @@
             flex-direction: column;
             align-items: stretch;
         }
+
+        .modal {
+            padding: 16px;
+        }
+
+        .modal-content {
+            width: 100%;
+            padding: 24px 20px 22px;
+            border-radius: 24px;
+        }
+
+        .modal-header {
+            padding-right: 52px;
+        }
     }
 </style>
 
-<main class="page">
+<main class="page admin-dashboard-page" id="adminDashboardPage">
     <div class="container">
         @if (session('success'))
             <div class="success-box">{{ session('success') }}</div>
@@ -361,7 +501,7 @@
 
                 @foreach ($departments as $department)
                     <div class="demo-box" style="margin-top: 16px;">
-                        <h3 style="margin: 0 0 14px; color: var(--primary-dark);">{{ $department->name }}</h3>
+                        <h3 style="margin: 0 0 14px; color: var(--primary);">{{ $department->name }}</h3>
                         <ul class="category-list">
                             @forelse ($department->categories as $category)
                                 <li class="category-item">
@@ -426,11 +566,15 @@
         </section>
     </div>
 
-    <div id="addUserModal" class="modal">
+    <div id="addUserModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="addUserModalTitle">
         <div class="modal-content">
             <button type="button" class="close-modal" onclick="closeModal('addUserModal')">&times;</button>
-            <h2>Add User</h2>
-            <form method="POST" action="{{ route('admin.users.store') }}">
+            <div class="modal-header">
+                <p class="modal-kicker">Admin Tools</p>
+                <h2 id="addUserModalTitle">Add User</h2>
+                <p class="modal-copy">Create a new account, choose the correct role, and assign a department only when the user is staff.</p>
+            </div>
+            <form method="POST" action="{{ route('admin.users.store') }}" class="modal-form">
                 @csrf
                 <div class="form-group">
                     <label>Name</label>
@@ -461,17 +605,21 @@
                     <label>Password</label>
                     <input type="password" name="password" required minlength="8">
                 </div>
-                <button type="submit" class="button button-primary w-full">Create User</button>
+                <button type="submit" class="button button-primary w-full modal-submit">Create User</button>
             </form>
         </div>
     </div>
 
     @foreach ($recentUsers as $user)
-        <div id="editUserModal-{{ $user->id }}" class="modal">
+        <div id="editUserModal-{{ $user->id }}" class="modal" role="dialog" aria-modal="true" aria-labelledby="editUserModalTitle-{{ $user->id }}">
             <div class="modal-content">
                 <button type="button" class="close-modal" onclick="closeModal('editUserModal-{{ $user->id }}')">&times;</button>
-                <h2>Edit User</h2>
-                <form method="POST" action="{{ route('admin.users.update', $user) }}">
+                <div class="modal-header">
+                    <p class="modal-kicker">Account Editor</p>
+                    <h2 id="editUserModalTitle-{{ $user->id }}">Edit User</h2>
+                    <p class="modal-copy">Update the account details for {{ $user->name }} and keep the department aligned with the selected role.</p>
+                </div>
+                <form method="POST" action="{{ route('admin.users.update', $user) }}" class="modal-form">
                     @csrf
                     @method('PUT')
                     <div class="form-group">
@@ -501,50 +649,62 @@
                             @endforeach
                         </select>
                     </div>
-                    <button type="submit" class="button button-primary w-full">Save User</button>
+                    <button type="submit" class="button button-primary w-full modal-submit">Save User</button>
                 </form>
             </div>
         </div>
     @endforeach
 
-    <div id="addDepartmentModal" class="modal">
+    <div id="addDepartmentModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="addDepartmentModalTitle">
         <div class="modal-content">
             <button type="button" class="close-modal" onclick="closeModal('addDepartmentModal')">&times;</button>
-            <h2>Add Department</h2>
-            <form method="POST" action="{{ route('admin.departments.store') }}">
+            <div class="modal-header">
+                <p class="modal-kicker">Campus Structure</p>
+                <h2 id="addDepartmentModalTitle">Add Department</h2>
+                <p class="modal-copy">Create a new department so requests, staff assignments, and service categories can be routed correctly.</p>
+            </div>
+            <form method="POST" action="{{ route('admin.departments.store') }}" class="modal-form">
                 @csrf
                 <div class="form-group">
                     <label>Department Name</label>
                     <input type="text" name="name" required>
                 </div>
-                <button type="submit" class="button button-primary w-full">Create Department</button>
+                <button type="submit" class="button button-primary w-full modal-submit">Create Department</button>
             </form>
         </div>
     </div>
 
     @foreach ($departments as $department)
-        <div id="editDepartmentModal-{{ $department->id }}" class="modal">
+        <div id="editDepartmentModal-{{ $department->id }}" class="modal" role="dialog" aria-modal="true" aria-labelledby="editDepartmentModalTitle-{{ $department->id }}">
             <div class="modal-content">
                 <button type="button" class="close-modal" onclick="closeModal('editDepartmentModal-{{ $department->id }}')">&times;</button>
-                <h2>Edit Department</h2>
-                <form method="POST" action="{{ route('admin.departments.update', $department) }}">
+                <div class="modal-header">
+                    <p class="modal-kicker">Campus Structure</p>
+                    <h2 id="editDepartmentModalTitle-{{ $department->id }}">Edit Department</h2>
+                    <p class="modal-copy">Rename {{ $department->name }} without affecting its current staff assignments, categories, or request history.</p>
+                </div>
+                <form method="POST" action="{{ route('admin.departments.update', $department) }}" class="modal-form">
                     @csrf
                     @method('PUT')
                     <div class="form-group">
                         <label>Department Name</label>
                         <input type="text" name="name" value="{{ $department->name }}" required>
                     </div>
-                    <button type="submit" class="button button-primary w-full">Save Department</button>
+                    <button type="submit" class="button button-primary w-full modal-submit">Save Department</button>
                 </form>
             </div>
         </div>
     @endforeach
 
-    <div id="addCategoryModal" class="modal">
+    <div id="addCategoryModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="addCategoryModalTitle">
         <div class="modal-content">
             <button type="button" class="close-modal" onclick="closeModal('addCategoryModal')">&times;</button>
-            <h2>Add Service Category</h2>
-            <form method="POST" action="{{ route('admin.categories.store') }}">
+            <div class="modal-header">
+                <p class="modal-kicker">Request Routing</p>
+                <h2 id="addCategoryModalTitle">Add Service Category</h2>
+                <p class="modal-copy">Create a category inside the correct department so students can route new requests with more precision.</p>
+            </div>
+            <form method="POST" action="{{ route('admin.categories.store') }}" class="modal-form">
                 @csrf
                 <div class="form-group">
                     <label>Department</label>
@@ -558,18 +718,22 @@
                     <label>Category Name</label>
                     <input type="text" name="name" required>
                 </div>
-                <button type="submit" class="button button-primary w-full">Create Category</button>
+                <button type="submit" class="button button-primary w-full modal-submit">Create Category</button>
             </form>
         </div>
     </div>
 
     @foreach ($departments as $department)
         @foreach ($department->categories as $category)
-            <div id="editCategoryModal-{{ $category->id }}" class="modal">
+            <div id="editCategoryModal-{{ $category->id }}" class="modal" role="dialog" aria-modal="true" aria-labelledby="editCategoryModalTitle-{{ $category->id }}">
                 <div class="modal-content">
                     <button type="button" class="close-modal" onclick="closeModal('editCategoryModal-{{ $category->id }}')">&times;</button>
-                    <h2>Edit Service Category</h2>
-                    <form method="POST" action="{{ route('admin.categories.update', $category) }}">
+                    <div class="modal-header">
+                        <p class="modal-kicker">Request Routing</p>
+                        <h2 id="editCategoryModalTitle-{{ $category->id }}">Edit Service Category</h2>
+                        <p class="modal-copy">Adjust the name or department for {{ $category->name }} while keeping the category aligned with existing request data.</p>
+                    </div>
+                    <form method="POST" action="{{ route('admin.categories.update', $category) }}" class="modal-form">
                         @csrf
                         @method('PUT')
                         <div class="form-group">
@@ -586,7 +750,7 @@
                             <label>Category Name</label>
                             <input type="text" name="name" value="{{ $category->name }}" required>
                         </div>
-                        <button type="submit" class="button button-primary w-full">Save Category</button>
+                        <button type="submit" class="button button-primary w-full modal-submit">Save Category</button>
                     </form>
                 </div>
             </div>
@@ -595,18 +759,45 @@
 </main>
 
 <script>
+    const adminDashboardPage = document.getElementById('adminDashboardPage');
+
+    function syncModalState() {
+        const hasActiveModal = document.querySelector('.modal.active') !== null;
+
+        document.body.classList.toggle('modal-open', hasActiveModal);
+        adminDashboardPage?.classList.toggle('modal-open', hasActiveModal);
+    }
+
     function openModal(id) {
         document.getElementById(id)?.classList.add('active');
+        syncModalState();
     }
 
     function closeModal(id) {
         document.getElementById(id)?.classList.remove('active');
+        syncModalState();
     }
 
     window.addEventListener('click', (event) => {
         if (event.target.classList.contains('modal')) {
             event.target.classList.remove('active');
+            syncModalState();
         }
+    });
+
+    window.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') {
+            return;
+        }
+
+        const activeModal = document.querySelector('.modal.active');
+
+        if (! activeModal) {
+            return;
+        }
+
+        activeModal.classList.remove('active');
+        syncModalState();
     });
 </script>
 @endsection

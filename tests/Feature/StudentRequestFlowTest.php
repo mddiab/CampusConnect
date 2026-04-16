@@ -144,6 +144,57 @@ class StudentRequestFlowTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_student_can_add_a_reply_to_their_request_conversation(): void
+    {
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        $serviceRequest = ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+        ]);
+
+        $response = $this
+            ->actingAs($student)
+            ->post(route('student.requests.messages.store', $serviceRequest), [
+                'message' => 'I can share the classroom number if that helps your team find the issue.',
+            ]);
+
+        $response->assertRedirect(route('student.requests.show', $serviceRequest));
+
+        $this->assertDatabaseHas('service_request_messages', [
+            'service_request_id' => $serviceRequest->id,
+            'user_id' => $student->id,
+            'author_name' => $student->name,
+            'author_role' => User::ROLE_STUDENT,
+            'message' => 'I can share the classroom number if that helps your team find the issue.',
+        ]);
+    }
+
+    public function test_student_cannot_reply_to_another_students_request_conversation(): void
+    {
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        $otherStudent = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        $serviceRequest = ServiceRequest::factory()->create([
+            'user_id' => $otherStudent->id,
+        ]);
+
+        $response = $this
+            ->actingAs($student)
+            ->post(route('student.requests.messages.store', $serviceRequest), [
+                'message' => 'This reply should not be accepted.',
+            ]);
+
+        $response->assertForbidden();
+        $this->assertDatabaseCount('service_request_messages', 0);
+    }
+
     public function test_student_can_download_their_own_attachment(): void
     {
         Storage::fake('local');

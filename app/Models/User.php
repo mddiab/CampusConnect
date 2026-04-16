@@ -50,6 +50,11 @@ class User extends Authenticatable
         return $this->hasMany(ServiceRequest::class);
     }
 
+    public function serviceRequestMessages(): HasMany
+    {
+        return $this->hasMany(ServiceRequestMessage::class);
+    }
+
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);

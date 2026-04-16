@@ -67,14 +67,34 @@ class StaffRequestController extends Controller
 
     public function show(Request $request, ServiceRequest $serviceRequest): View
     {
-        $serviceRequest->loadMissing(['user', 'department', 'serviceCategory']);
-
         abort_unless($serviceRequest->canBeManagedBy($request->user()), 403);
+
+        $serviceRequest->loadMissing([
+            'user',
+            'department',
+            'serviceCategory',
+            'messages' => fn ($query) => $query->oldest(),
+        ]);
 
         return view('staff.requests.show', [
             'serviceRequest' => $serviceRequest,
             'statuses' => ServiceRequest::statuses(),
         ]);
+    }
+
+    public function storeMessage(Request $request, ServiceRequest $serviceRequest): RedirectResponse
+    {
+        abort_unless($serviceRequest->canBeManagedBy($request->user()), 403);
+
+        $validated = $request->validate([
+            'message' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $serviceRequest->addMessageFrom($request->user(), $validated['message']);
+
+        return redirect()
+            ->route('staff.requests.show', $serviceRequest)
+            ->with('status', 'Your reply was added to the request conversation.');
     }
 
     public function update(Request $request, ServiceRequest $serviceRequest): RedirectResponse

@@ -146,6 +146,87 @@ class StaffRequestFlowTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_staff_can_add_a_reply_to_request_conversation_for_their_department(): void
+    {
+        $department = Department::query()
+            ->where('name', 'Information Technology')
+            ->firstOrFail();
+
+        $category = ServiceCategory::query()
+            ->where('name', 'Technical Support')
+            ->where('department_id', $department->id)
+            ->firstOrFail();
+
+        $staff = User::factory()->create([
+            'role' => User::ROLE_STAFF,
+            'department_id' => $department->id,
+        ]);
+
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        $serviceRequest = ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+            'service_category_id' => $category->id,
+        ]);
+
+        $response = $this
+            ->actingAs($staff)
+            ->post(route('staff.requests.messages.store', $serviceRequest), [
+                'message' => 'We have scheduled a technician to inspect the classroom network this afternoon.',
+            ]);
+
+        $response->assertRedirect(route('staff.requests.show', $serviceRequest));
+
+        $this->assertDatabaseHas('service_request_messages', [
+            'service_request_id' => $serviceRequest->id,
+            'user_id' => $staff->id,
+            'author_name' => $staff->name,
+            'author_role' => User::ROLE_STAFF,
+            'message' => 'We have scheduled a technician to inspect the classroom network this afternoon.',
+        ]);
+    }
+
+    public function test_staff_cannot_reply_to_request_conversation_for_another_department(): void
+    {
+        $informationTechnology = Department::query()
+            ->where('name', 'Information Technology')
+            ->firstOrFail();
+
+        $maintenance = Department::query()
+            ->where('name', 'Maintenance')
+            ->firstOrFail();
+
+        $maintenanceCategory = ServiceCategory::query()
+            ->where('name', 'Facility Maintenance')
+            ->where('department_id', $maintenance->id)
+            ->firstOrFail();
+
+        $staff = User::factory()->create([
+            'role' => User::ROLE_STAFF,
+            'department_id' => $informationTechnology->id,
+        ]);
+
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        $serviceRequest = ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+            'service_category_id' => $maintenanceCategory->id,
+        ]);
+
+        $response = $this
+            ->actingAs($staff)
+            ->post(route('staff.requests.messages.store', $serviceRequest), [
+                'message' => 'This reply should not be accepted.',
+            ]);
+
+        $response->assertForbidden();
+        $this->assertDatabaseCount('service_request_messages', 0);
+    }
+
     public function test_staff_can_download_attachment_for_department_request(): void
     {
         Storage::fake('local');

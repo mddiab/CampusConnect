@@ -6,6 +6,7 @@ The current implementation supports:
 
 - student request submission with department-aware category selection
 - relational request storage using `department_id` and `service_category_id`
+- student and staff request conversations with reply timelines on each request
 - staff request queues scoped to the staff member's department
 - staff status updates and staff notes
 - admin user management with department assignment for staff accounts
@@ -30,6 +31,7 @@ The current implementation supports:
 - submits service requests
 - sees only their own requests
 - can open request detail pages and download their own attachments
+- can reply in the request conversation on their own requests
 - can see staff notes and completion timestamps on their requests
 
 ### Staff
@@ -39,6 +41,7 @@ The current implementation supports:
 - sees only requests assigned to their department
 - can open request review pages
 - can update request status and staff notes
+- can reply in request conversations for requests in their department
 - can download attachments for requests in their department
 
 ### Admin
@@ -117,6 +120,7 @@ tests/
 | `GET` | `/student/dashboard` | `student.dashboard` | `DashboardController@student` | `web`, `auth`, `role:student` |
 | `POST` | `/student/requests` | `student.requests.store` | `StudentRequestController@store` | `web`, `auth`, `role:student` |
 | `GET` | `/student/requests/{serviceRequest}` | `student.requests.show` | `StudentRequestController@show` | `web`, `auth`, `role:student` |
+| `POST` | `/student/requests/{serviceRequest}/messages` | `student.requests.messages.store` | `StudentRequestController@storeMessage` | `web`, `auth`, `role:student` |
 | `GET` | `/student/requests/{serviceRequest}/attachment` | `student.requests.attachment` | `StudentRequestController@download` | `web`, `auth`, `role:student` |
 
 ### Staff Routes
@@ -125,6 +129,7 @@ tests/
 | --- | --- | --- | --- | --- |
 | `GET` | `/staff/dashboard` | `staff.dashboard` | `StaffRequestController@index` | `web`, `auth`, `role:staff` |
 | `GET` | `/staff/requests/{serviceRequest}` | `staff.requests.show` | `StaffRequestController@show` | `web`, `auth`, `role:staff` |
+| `POST` | `/staff/requests/{serviceRequest}/messages` | `staff.requests.messages.store` | `StaffRequestController@storeMessage` | `web`, `auth`, `role:staff` |
 | `PATCH` | `/staff/requests/{serviceRequest}` | `staff.requests.update` | `StaffRequestController@update` | `web`, `auth`, `role:staff` |
 | `GET` | `/staff/requests/{serviceRequest}/attachment` | `staff.requests.attachment` | `StaffRequestController@download` | `web`, `auth`, `role:staff` |
 
@@ -183,6 +188,7 @@ tests/
   - optional attachment
 - ensures the chosen category belongs to the selected department
 - creates requests with `pending` status
+- lets students add request-conversation replies to their own requests
 - restricts request detail and attachment download to the owning student
 
 ### `StaffRequestController`
@@ -190,6 +196,7 @@ tests/
 - loads the staff dashboard for the authenticated staff member's department
 - filters the queue by status
 - restricts request review/update/download to matching department staff
+- lets staff add conversation replies only on requests in their own department
 - updates:
   - `status`
   - `staff_notes`
@@ -286,6 +293,7 @@ Relationships:
 - `user()`: `belongsTo(User::class)`
 - `department()`: `belongsTo(Department::class)`
 - `serviceCategory()`: `belongsTo(ServiceCategory::class)`
+- `messages()`: `hasMany(ServiceRequestMessage::class)`
 
 Status constants:
 
@@ -299,6 +307,22 @@ Important behavior:
 - clears `resolved_at` unless the request is completed
 - sets `resolved_at` automatically when status changes to `completed`
 - provides helper methods for status labels and staff authorization checks
+- can append conversation replies with author snapshots
+
+### `ServiceRequestMessage`
+
+Important fields:
+
+- `service_request_id`
+- `user_id`
+- `author_name`
+- `author_role`
+- `message`
+
+Relationships:
+
+- `serviceRequest()`: `belongsTo(ServiceRequest::class)`
+- `user()`: `belongsTo(User::class)`
 
 ## Views
 
@@ -379,6 +403,19 @@ Important behavior:
 | `created_at` | timestamp | yes | |
 | `updated_at` | timestamp | yes | |
 
+### `service_request_messages`
+
+| Column | Type | Null | Notes |
+| --- | --- | --- | --- |
+| `id` | bigint unsigned | no | primary key |
+| `service_request_id` | bigint unsigned | no | FK -> `service_requests.id`, cascade delete |
+| `user_id` | bigint unsigned | yes | FK -> `users.id`, `nullOnDelete()` |
+| `author_name` | varchar | no | author snapshot for timeline history |
+| `author_role` | varchar | no | author role snapshot |
+| `message` | text | no | conversation body |
+| `created_at` | timestamp | yes | |
+| `updated_at` | timestamp | yes | |
+
 ### Framework Tables
 
 The repo also includes Laravel's default operational tables:
@@ -452,6 +489,7 @@ Feature coverage includes:
 - request ownership rules
 - staff department scoping
 - staff request updates
+- request conversation replies for students and staff
 - staff attachment download
 - admin department/category management
 - admin report export
