@@ -17,8 +17,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'title',
     'description',
     'status',
+    'is_urgent',
     'staff_notes',
     'resolved_at',
+    'archived_at',
     'attachment_path',
     'attachment_original_name',
 ])]
@@ -118,6 +120,16 @@ class ServiceRequest extends Model
         );
     }
 
+    public function scopeNotArchived(Builder $query): Builder
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    public function scopeArchived(Builder $query): Builder
+    {
+        return $query->whereNotNull('archived_at');
+    }
+
     public function departmentName(): string
     {
         return $this->department?->name ?? 'Unassigned';
@@ -152,5 +164,22 @@ class ServiceRequest extends Model
             'author_role' => $user->role,
             'message' => $message,
         ]);
+    }
+
+    /**
+     * FEATURE: Request History & Archiving - Check if request is archived
+     */
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null;
+    }
+
+    /**
+     * FEATURE: Edit/Update Requests - Check if request can be edited
+     * Only pending requests can be edited by their creator
+     */
+    public function canBeEditedBy(User $user): bool
+    {
+        return $this->user_id === $user->id && $this->status === self::STATUS_PENDING;
     }
 }

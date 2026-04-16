@@ -20,6 +20,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/student/dashboard', [DashboardController::class, 'student'])->name('student.dashboard');
         Route::post('/student/requests', [StudentRequestController::class, 'store'])->name('student.requests.store');
         Route::get('/student/requests/{serviceRequest}', [StudentRequestController::class, 'show'])->name('student.requests.show');
+        // FEATURE: Edit/Update Requests
+        Route::get('/student/requests/{serviceRequest}/edit', [StudentRequestController::class, 'edit'])->name('student.requests.edit');
+        Route::patch('/student/requests/{serviceRequest}', [StudentRequestController::class, 'update'])->name('student.requests.update');
         Route::post('/student/requests/{serviceRequest}/messages', [StudentRequestController::class, 'storeMessage'])
             ->name('student.requests.messages.store');
         Route::get('/student/requests/{serviceRequest}/attachment', [StudentRequestController::class, 'download'])

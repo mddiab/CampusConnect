@@ -51,14 +51,41 @@
                         </strong>
                         <span>Current request status based on department handling.</span>
                     </div>
+
+                    @if ($serviceRequest->is_urgent)
+                        <div class="stat-box">
+                            <strong class="placeholder-value" style="color: #dc2626;">🚨 Urgent</strong>
+                            <span>This request has been marked as requiring priority attention.</span>
+                        </div>
+                    @endif
                 </div>
+
+                @if ($serviceRequest->isArchived())
+                    <div class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded mt-4">
+                        <strong>📦 Archived Request:</strong> This request was archived on {{ $serviceRequest->archived_at->format('M d, Y') }}.
+                        You can view it here, but cannot add new messages or make changes.
+                    </div>
+                @endif
             </section>
 
             <section class="panel-grid">
                 <article class="panel">
-                    <div class="panel-header">
-                        <h2>Request Details</h2>
-                        <a href="{{ route('student.dashboard') }}" class="text-link">Back to Dashboard</a>
+                    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2>Request Details</h2>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            @if ($serviceRequest->canBeEditedBy(auth()->user()))
+                                <a href="{{ route('student.requests.edit', $serviceRequest) }}" class="text-link" style="padding: 8px 16px; background-color: #3b82f6; color: white; border-radius: 4px; text-decoration: none; font-weight: 500;">
+                                    ✏️ Edit Request
+                                </a>
+                            @elseif ($serviceRequest->status !== 'pending')
+                                <span class="text-muted" style="padding: 8px 16px; color: #999; font-size: 14px;">
+                                    Cannot edit ({{ $serviceRequest->statusLabel() }})
+                                </span>
+                            @endif
+                            <a href="{{ route('student.dashboard') }}" class="text-link">Back to Dashboard</a>
+                        </div>
                     </div>
 
                     <div class="table-wrap">
@@ -79,6 +106,16 @@
                                 <tr>
                                     <th>Description</th>
                                     <td>{{ $serviceRequest->description }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Priority Level</th>
+                                    <td>
+                                        @if ($serviceRequest->is_urgent)
+                                            <span style="color: #dc2626; font-weight: bold;">🚨 Urgent</span>
+                                        @else
+                                            <span style="color: #059669;">Normal</span>
+                                        @endif
+                                    </td>
                                 </tr>
                                 <tr>
                                     <th>Staff Notes</th>
@@ -147,24 +184,34 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('student.requests.messages.store', $serviceRequest) }}">
-                    @csrf
+                @unless ($serviceRequest->isArchived())
+                    <form method="POST" action="{{ route('student.requests.messages.store', $serviceRequest) }}">
+                        @csrf
 
-                    <div class="form-group">
-                        <label for="message">Add Reply</label>
-                        <textarea
-                            id="message"
-                            name="message"
-                            placeholder="Ask a follow-up question or share extra details that will help the department handle this request"
-                            required
-                        >{{ old('message') }}</textarea>
-                        <span class="field-help">Replies appear in the timeline immediately and are visible to the department handling the request.</span>
-                    </div>
+                        <div class="form-group">
+                            <label for="message">Add Reply</label>
+                            <textarea
+                                id="message"
+                                name="message"
+                                placeholder="Ask a follow-up question or share extra details that will help the department handle this request"
+                                required
+                            >{{ old('message') }}</textarea>
+                            <span class="field-help">Replies appear in the timeline immediately and are visible to the department handling the request.</span>
+                        </div>
 
-                    <div class="form-actions">
-                        <button type="submit" class="button button-primary">Post Reply</button>
+                        <div class="form-actions">
+                            <button type="submit" class="button button-primary">Post Reply</button>
+                        </div>
+                    </form>
+                @endunless
+
+                @if ($serviceRequest->isArchived())
+                    <div class="bg-gray-50 border border-gray-200 rounded p-4 text-center" style="margin-top: 16px;">
+                        <p class="text-gray-600">
+                            🔒 This archived request is read-only. You cannot add new messages to archived requests.
+                        </p>
                     </div>
-                </form>
+                @endif
             </section>
         </div>
     </main>

@@ -17,11 +17,47 @@ class DashboardController extends Controller
 
     public function student(Request $request): View
     {
-        $serviceRequests = $request->user()
-            ->serviceRequests()
-            ->with(['department', 'serviceCategory'])
-            ->latest()
-            ->get();
+        $query = $request->user()->serviceRequests();
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply status filter
+        if ($request->filled('status') && $request->input('status') !== 'all') {
+            $query->where('status', $request->input('status'));
+        }
+
+        // Apply department filter
+        if ($request->filled('department') && $request->input('department') !== 'all') {
+            $query->where('department_id', $request->input('department'));
+        }
+
+        // Apply category filter
+        if ($request->filled('category') && $request->input('category') !== 'all') {
+            $query->where('service_category_id', $request->input('category'));
+        }
+
+        // Apply sort
+        $sort = $request->input('sort', 'latest');
+        match ($sort) {
+            'oldest' => $query->oldest(),
+            'title' => $query->orderBy('title', 'asc'),
+            'title-desc' => $query->orderBy('title', 'desc'),
+            default => $query->latest(),
+        };
+
+        // Get all requests with eager loading
+        $allRequests = $query->with(['department', 'serviceCategory'])->get();
+
+        // Separate archived and active
+        $activeRequests = $allRequests->filter(fn ($r) => !$r->archived_at);
+        $archivedRequests = $allRequests->filter(fn ($r) => $r->archived_at);
 
         $departments = Department::query()
             ->with(['categories' => fn ($query) => $query->orderBy('name')])
@@ -29,12 +65,14 @@ class DashboardController extends Controller
             ->get();
 
         return view('dashboards.student', [
-            'serviceRequests' => $serviceRequests,
-            'recentRequests' => $serviceRequests->sortByDesc('updated_at')->take(3),
-            'pendingRequestCount' => $serviceRequests->where('status', ServiceRequest::STATUS_PENDING)->count(),
-            'inProgressRequestCount' => $serviceRequests->where('status', ServiceRequest::STATUS_IN_PROGRESS)->count(),
-            'completedRequestCount' => $serviceRequests->where('status', ServiceRequest::STATUS_COMPLETED)->count(),
-            'totalRequestCount' => $serviceRequests->count(),
+            'activeRequests' => $activeRequests,
+            'archivedRequests' => $archivedRequests,
+            'recentRequests' => $activeRequests->sortByDesc('updated_at')->take(3),
+            'pendingRequestCount' => $activeRequests->where('status', ServiceRequest::STATUS_PENDING)->count(),
+            'inProgressRequestCount' => $activeRequests->where('status', ServiceRequest::STATUS_IN_PROGRESS)->count(),
+            'completedRequestCount' => $activeRequests->where('status', ServiceRequest::STATUS_COMPLETED)->count(),
+            'totalRequestCount' => $activeRequests->count(),
+            'archivedRequestCount' => $archivedRequests->count(),
             'departments' => $departments,
             'categoriesByDepartment' => $departments
                 ->mapWithKeys(fn (Department $department) => [

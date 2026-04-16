@@ -27,6 +27,8 @@ class StudentRequestController extends Controller
                 ),
             ],
             'description' => ['required', 'string', 'max:5000'],
+            // FEATURE: Priority Levels - Add urgent flag
+            'is_urgent' => ['nullable', 'boolean'],
             'attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:2048'],
         ]);
 
@@ -48,6 +50,7 @@ class StudentRequestController extends Controller
             'service_category_id' => $serviceCategory->id,
             'description' => $validated['description'],
             'status' => ServiceRequest::STATUS_PENDING,
+            'is_urgent' => $validated['is_urgent'] ?? false,
             'attachment_path' => $attachmentPath,
             'attachment_original_name' => $attachmentOriginalName,
         ]);
@@ -86,6 +89,66 @@ class StudentRequestController extends Controller
         return redirect()
             ->route('student.requests.show', $serviceRequest)
             ->with('status', 'Your reply was posted to the request conversation.');
+    }
+
+    /**
+     * FEATURE: Edit/Update Requests - Show edit form for pending requests
+     */
+    public function edit(Request $request, ServiceRequest $serviceRequest): View
+    {
+        // Verify request belongs to user and is still pending
+        abort_unless($serviceRequest->canBeEditedBy($request->user()), 403);
+
+        $serviceRequest->loadMissing(['department', 'serviceCategory']);
+        $departments = \App\Models\Department::query()->with('categories')->get();
+
+        return view('students.requests.edit', [
+            'serviceRequest' => $serviceRequest,
+            'departments' => $departments,
+        ]);
+    }
+
+    /**
+     * FEATURE: Edit/Update Requests - Update pending request
+     */
+    public function update(Request $request, ServiceRequest $serviceRequest): RedirectResponse
+    {
+        // Verify request belongs to user and is still pending
+        abort_unless($serviceRequest->canBeEditedBy($request->user()), 403);
+
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string', 'max:5000'],
+            'is_urgent' => ['nullable', 'boolean'],
+            'attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:2048'],
+        ]);
+
+        // Handle new attachment if uploaded
+        if ($request->hasFile('attachment')) {
+            // Delete old attachment if exists
+            if ($serviceRequest->attachment_path && Storage::exists($serviceRequest->attachment_path)) {
+                Storage::delete($serviceRequest->attachment_path);
+            }
+
+            $attachmentPath = $request->file('attachment')->store('service-requests');
+            $attachmentOriginalName = $request->file('attachment')->getClientOriginalName();
+
+            $serviceRequest->update([
+                'attachment_path' => $attachmentPath,
+                'attachment_original_name' => $attachmentOriginalName,
+            ]);
+        }
+
+        // Update editable fields
+        $serviceRequest->update([
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'is_urgent' => $validated['is_urgent'] ?? false,
+        ]);
+
+        return redirect()
+            ->route('student.requests.show', $serviceRequest)
+            ->with('status', 'Your request has been updated successfully.');
     }
 
     public function download(Request $request, ServiceRequest $serviceRequest): StreamedResponse
