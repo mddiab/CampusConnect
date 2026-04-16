@@ -31,6 +31,16 @@ class ServiceRequest extends Model
     public const STATUS_IN_PROGRESS = 'in_progress';
     public const STATUS_COMPLETED = 'completed';
 
+    public function scopeNotArchived($query)
+{
+    return $query->where('archived', false);
+}
+
+public function scopeArchived($query)
+{
+    return $query->where('archived', true);
+}
+
     public static function departments(): array
     {
         return [
