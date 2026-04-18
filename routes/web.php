@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StaffRequestController;
 use App\Http\Controllers\StudentRequestController;
@@ -10,6 +11,9 @@ use App\Http\Controllers\AdminController;
 Route::get('/', [LoginController::class, 'create'])->name('login');
 Route::get('/login', fn () => redirect()->route('login'));
 Route::post('/login', [LoginController::class, 'store'])->name('login.store');
+Route::post('/assistant/chat', [AssistantController::class, 'store'])
+    ->middleware('throttle:assistant-chat')
+    ->name('assistant.chat');
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
