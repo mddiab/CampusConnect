@@ -127,6 +127,148 @@
         color: var(--text);
     }
 
+    .category-section {
+        display: grid;
+        gap: 18px;
+    }
+
+    .category-overview {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .category-overview-card {
+        padding: 18px;
+        border: 1px solid rgba(95, 67, 167, 0.12);
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 241, 252, 0.92));
+    }
+
+    .category-overview-card strong {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--text);
+        font-size: 1.5rem;
+    }
+
+    .category-overview-card span {
+        color: var(--muted);
+        line-height: 1.6;
+    }
+
+    .category-board-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        align-items: start;
+    }
+
+    .category-board {
+        display: grid;
+        gap: 16px;
+        align-content: start;
+        align-self: start;
+        padding: 20px;
+        border: 1px solid rgba(95, 67, 167, 0.14);
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 244, 253, 0.96));
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    }
+
+    .category-board-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+    }
+
+    .category-board-title {
+        margin: 0;
+        color: var(--text);
+        font-size: 1.12rem;
+    }
+
+    .category-board-copy {
+        margin: 6px 0 0;
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.94rem;
+    }
+
+    .category-board-count {
+        display: inline-flex;
+        align-items: center;
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(95, 67, 167, 0.14);
+        background: rgba(246, 241, 252, 0.92);
+        color: var(--primary);
+        font-size: 0.88rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .category-card-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .category-card {
+        display: grid;
+        gap: 12px;
+        align-content: start;
+        padding: 16px;
+        border: 1px solid rgba(95, 67, 167, 0.1);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.96);
+    }
+
+    .category-card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .category-card-title {
+        margin: 0;
+        color: var(--text);
+        font-size: 1rem;
+    }
+
+    .category-card-copy {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+        line-height: 1.6;
+    }
+
+    .category-request-chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: rgba(95, 67, 167, 0.08);
+        color: var(--primary);
+        font-size: 0.84rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .category-card-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .category-card-actions .inline-form {
+        display: inline-flex;
+    }
+
     .admin-dashboard-page {
         position: relative;
     }
@@ -305,6 +447,18 @@
             align-items: stretch;
         }
 
+        .category-overview,
+        .category-board-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .category-board-header,
+        .category-card-top,
+        .category-card-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
         .modal {
             padding: 16px;
         }
@@ -364,15 +518,53 @@
             </div>
 
             <div class="admin-nav">
+                <a href="#reports-overview" class="button button-plain">Recent Activity</a>
                 <a href="#user-management" class="button button-plain">Users</a>
                 <a href="#department-management" class="button button-plain">Departments</a>
                 <a href="#category-management" class="button button-plain">Categories</a>
-                <a href="#reports-overview" class="button button-plain">Recent Activity</a>
                 <a href="{{ route('admin.reports') }}" class="button button-secondary">Full Reports</a>
             </div>
         </section>
 
         <section class="section-stack-admin">
+            <article class="panel section-id" id="reports-overview">
+                <div class="panel-header">
+                    <h2><i class="fas fa-chart-bar"></i> Recent Activity</h2>
+                    <div class="inline-actions">
+                        <a href="{{ route('admin.reports') }}" class="button button-plain btn-sm">Open Reports</a>
+                        <a href="{{ route('admin.reports.export', request()->only(['status', 'dept'])) }}" class="button button-secondary btn-sm">Export CSV</a>
+                    </div>
+                </div>
+
+                <div class="pill-row" style="margin-bottom: 18px;">
+                    <a href="{{ request()->fullUrlWithQuery(['status' => 'all']) }}" class="button {{ request('status', 'all') === 'all' ? 'button-primary' : 'button-plain' }}">All</a>
+                    <a href="{{ request()->fullUrlWithQuery(['status' => 'pending']) }}" class="button {{ request('status') === 'pending' ? 'button-primary' : 'button-plain' }}">Pending</a>
+                    <a href="{{ request()->fullUrlWithQuery(['status' => 'in_progress']) }}" class="button {{ request('status') === 'in_progress' ? 'button-primary' : 'button-plain' }}">In Progress</a>
+                    <a href="{{ request()->fullUrlWithQuery(['status' => 'completed']) }}" class="button {{ request('status') === 'completed' ? 'button-primary' : 'button-plain' }}">Completed</a>
+                </div>
+
+                <ul class="category-list">
+                    @forelse ($logs as $log)
+                        <li class="category-item">
+                            <div>
+                                <strong>{{ $log->title }}</strong>
+                                <div class="muted-text">
+                                    {{ $log->user->name ?? 'Unknown' }} |
+                                    {{ $log->departmentName() }} |
+                                    {{ $log->categoryName() }} |
+                                    {{ $log->created_at->diffForHumans() }}
+                                </div>
+                            </div>
+                            <span class="status-badge status-{{ str_replace('_', '-', $log->status) }}">
+                                {{ ucfirst(str_replace('_', ' ', $log->status)) }}
+                            </span>
+                        </li>
+                    @empty
+                        <li class="empty-state">No recent activity matched the current filters.</li>
+                    @endforelse
+                </ul>
+            </article>
+
             <article class="panel section-id" id="user-management">
                 <div class="panel-header">
                     <h2><i class="fas fa-users"></i> User Management</h2>
@@ -482,10 +674,19 @@
             </article>
 
             <article class="panel section-id" id="category-management">
+                @php
+                    $visibleCategoryCount = $departments->sum(fn ($department) => $department->categories->count());
+                    $visibleCategoryRequestCount = $departments->sum(fn ($department) => $department->categories->sum('service_requests_count'));
+                @endphp
+
                 <div class="panel-header">
                     <h2><i class="fas fa-folder-open"></i> Service Categories</h2>
                     <button type="button" class="button button-primary" onclick="openModal('addCategoryModal')">Add Category</button>
                 </div>
+
+                <p class="info-note">
+                    Categories are grouped under each department so routing stays predictable. Use the filter to focus on one department when you need to edit categories quickly.
+                </p>
 
                 <form method="GET" action="{{ route('admin.dashboard') }}" class="admin-toolbar">
                     @if (request('search')) <input type="hidden" name="search" value="{{ request('search') }}"> @endif
@@ -499,69 +700,67 @@
                     <a href="{{ route('admin.categories') }}" class="button button-plain">Reset</a>
                 </form>
 
-                @foreach ($departments as $department)
-                    <div class="demo-box" style="margin-top: 16px;">
-                        <h3 style="margin: 0 0 14px; color: var(--primary);">{{ $department->name }}</h3>
-                        <ul class="category-list">
-                            @forelse ($department->categories as $category)
-                                <li class="category-item">
+                <div class="category-section">
+                    <div class="category-overview">
+                        <div class="category-overview-card">
+                            <strong>{{ $departments->count() }}</strong>
+                            <span>Departments currently shown in this category view.</span>
+                        </div>
+                        <div class="category-overview-card">
+                            <strong>{{ $visibleCategoryCount }}</strong>
+                            <span>Total categories available across the selected departments.</span>
+                        </div>
+                        <div class="category-overview-card">
+                            <strong>{{ $visibleCategoryRequestCount }}</strong>
+                            <span>Requests currently linked to those categories.</span>
+                        </div>
+                    </div>
+
+                    <div class="category-board-grid">
+                        @foreach ($departments as $department)
+                            <section class="category-board">
+                                <div class="category-board-header">
                                     <div>
-                                        <strong>{{ $category->name }}</strong>
-                                        <span class="muted-text">{{ $category->service_requests_count }} requests currently linked to this category.</span>
+                                        <h3 class="category-board-title">{{ $department->name }}</h3>
+                                        <p class="category-board-copy">
+                                            Keep routing clean by editing only the categories that belong to this department.
+                                        </p>
                                     </div>
-                                    <div class="inline-actions">
-                                        <button type="button" class="button btn-sm btn-edit" onclick="openModal('editCategoryModal-{{ $category->id }}')">Edit</button>
-                                        <form method="POST" action="{{ route('admin.categories.destroy', $category) }}" class="inline-form" onsubmit="return confirm('Delete this category?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="button btn-sm btn-delete">Delete</button>
-                                        </form>
-                                    </div>
-                                </li>
-                            @empty
-                                <li class="empty-state">No categories for this department yet.</li>
-                            @endforelse
-                        </ul>
-                    </div>
-                @endforeach
-            </article>
-
-            <article class="panel section-id" id="reports-overview">
-                <div class="panel-header">
-                    <h2><i class="fas fa-chart-bar"></i> Recent Activity</h2>
-                    <div class="inline-actions">
-                        <a href="{{ route('admin.reports') }}" class="button button-plain btn-sm">Open Reports</a>
-                        <a href="{{ route('admin.reports.export', request()->only(['status', 'dept'])) }}" class="button button-secondary btn-sm">Export CSV</a>
-                    </div>
-                </div>
-
-                <div class="pill-row" style="margin-bottom: 18px;">
-                    <a href="{{ request()->fullUrlWithQuery(['status' => 'all']) }}" class="button {{ request('status', 'all') === 'all' ? 'button-primary' : 'button-plain' }}">All</a>
-                    <a href="{{ request()->fullUrlWithQuery(['status' => 'pending']) }}" class="button {{ request('status') === 'pending' ? 'button-primary' : 'button-plain' }}">Pending</a>
-                    <a href="{{ request()->fullUrlWithQuery(['status' => 'in_progress']) }}" class="button {{ request('status') === 'in_progress' ? 'button-primary' : 'button-plain' }}">In Progress</a>
-                    <a href="{{ request()->fullUrlWithQuery(['status' => 'completed']) }}" class="button {{ request('status') === 'completed' ? 'button-primary' : 'button-plain' }}">Completed</a>
-                </div>
-
-                <ul class="category-list">
-                    @forelse ($logs as $log)
-                        <li class="category-item">
-                            <div>
-                                <strong>{{ $log->title }}</strong>
-                                <div class="muted-text">
-                                    {{ $log->user->name ?? 'Unknown' }} |
-                                    {{ $log->departmentName() }} |
-                                    {{ $log->categoryName() }} |
-                                    {{ $log->created_at->diffForHumans() }}
+                                    <span class="category-board-count">{{ $department->categories->count() }} categories</span>
                                 </div>
-                            </div>
-                            <span class="status-badge status-{{ str_replace('_', '-', $log->status) }}">
-                                {{ ucfirst(str_replace('_', ' ', $log->status)) }}
-                            </span>
-                        </li>
-                    @empty
-                        <li class="empty-state">No recent activity matched the current filters.</li>
-                    @endforelse
-                </ul>
+
+                                @if ($department->categories->isEmpty())
+                                    <div class="empty-state">No categories for this department yet.</div>
+                                @else
+                                    <div class="category-card-list">
+                                        @foreach ($department->categories as $category)
+                                            <article class="category-card">
+                                                <div class="category-card-top">
+                                                    <div>
+                                                        <h4 class="category-card-title">{{ $category->name }}</h4>
+                                                        <p class="category-card-copy">
+                                                            {{ $category->service_requests_count }} requests currently route through this category.
+                                                        </p>
+                                                    </div>
+                                                    <span class="category-request-chip">{{ $category->service_requests_count }} linked</span>
+                                                </div>
+
+                                                <div class="category-card-actions">
+                                                    <button type="button" class="button btn-sm btn-edit" onclick="openModal('editCategoryModal-{{ $category->id }}')">Edit</button>
+                                                    <form method="POST" action="{{ route('admin.categories.destroy', $category) }}" class="inline-form" onsubmit="return confirm('Delete this category?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="button btn-sm btn-delete">Delete</button>
+                                                    </form>
+                                                </div>
+                                            </article>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </section>
+                        @endforeach
+                    </div>
+                </div>
             </article>
         </section>
     </div>
