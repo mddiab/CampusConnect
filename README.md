@@ -39,6 +39,7 @@ The current implementation supports:
 - is redirected to `staff.dashboard`
 - must belong to a department to manage requests
 - sees only requests assigned to their department
+- shares each department workspace with up to 3 staff accounts for that department
 - can open request review pages
 - can update request status and staff notes
 - can reply in request conversations for requests in their department
@@ -458,7 +459,7 @@ The repo also includes Laravel's default operational tables:
 Seeded user totals:
 
 - 10 students
-- 6 staff members, one for each department
+- 18 staff members, 3 for each department
 - 3 admins
 
 Primary sample logins:
@@ -472,7 +473,7 @@ Primary sample logins:
 Additional seeded accounts include:
 
 - students: `student2@campusconnect.test` through `student10@campusconnect.test`
-- staff: `staff.maintenance@campusconnect.test`, `staff.registrar@campusconnect.test`, `staff.finance@campusconnect.test`, `staff.library@campusconnect.test`, `staff.affairs@campusconnect.test`
+- staff: `staff.it2@campusconnect.test`, `staff.it3@campusconnect.test`, `staff.maintenance@campusconnect.test`, `staff.maintenance2@campusconnect.test`, `staff.maintenance3@campusconnect.test`, `staff.registrar@campusconnect.test`, `staff.registrar2@campusconnect.test`, `staff.registrar3@campusconnect.test`, `staff.finance@campusconnect.test`, `staff.finance2@campusconnect.test`, `staff.finance3@campusconnect.test`, `staff.library@campusconnect.test`, `staff.library2@campusconnect.test`, `staff.library3@campusconnect.test`, `staff.affairs@campusconnect.test`, `staff.affairs2@campusconnect.test`, `staff.affairs3@campusconnect.test`
 - admins: `admin2@campusconnect.test`, `admin3@campusconnect.test`
 
 ### Demo Requests

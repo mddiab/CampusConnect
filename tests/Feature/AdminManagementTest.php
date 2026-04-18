@@ -7,6 +7,7 @@ use App\Models\ServiceCategory;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class AdminManagementTest extends TestCase
@@ -133,5 +134,41 @@ class AdminManagementTest extends TestCase
         $exportResponse->assertOk();
         $exportResponse->assertHeader('content-type', 'text/csv; charset=UTF-8');
         $this->assertStringContainsString($serviceRequest->title, $exportResponse->streamedContent());
+    }
+
+    public function test_admin_cannot_create_more_than_three_staff_accounts_for_a_department(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $department = Department::query()
+            ->where('name', 'Finance')
+            ->firstOrFail();
+
+        User::factory()->count(3)->create([
+            'role' => User::ROLE_STAFF,
+            'department_id' => $department->id,
+            'password' => Hash::make('password'),
+        ]);
+
+        $response = $this
+            ->actingAs($admin)
+            ->from(route('admin.dashboard'))
+            ->post(route('admin.users.store'), [
+                'name' => 'Finance Overflow',
+                'email' => 'finance-overflow@example.com',
+                'role' => User::ROLE_STAFF,
+                'department_id' => $department->id,
+                'password' => 'password123',
+            ]);
+
+        $response
+            ->assertRedirect(route('admin.dashboard'))
+            ->assertSessionHasErrors('department_id');
+
+        $this->assertDatabaseMissing('users', [
+            'email' => 'finance-overflow@example.com',
+        ]);
     }
 }

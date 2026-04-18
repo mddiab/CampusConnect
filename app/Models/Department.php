@@ -17,6 +17,11 @@ class Department extends Model
         return $this->hasMany(User::class);
     }
 
+    public function staffMembers(): HasMany
+    {
+        return $this->hasMany(User::class)->where('role', User::ROLE_STAFF);
+    }
+
     public function categories(): HasMany
     {
         return $this->hasMany(ServiceCategory::class);

@@ -35,7 +35,7 @@ class DatabaseSeederTest extends TestCase
         ]);
 
         $this->assertSame(10, User::query()->where('role', User::ROLE_STUDENT)->count());
-        $this->assertSame(6, User::query()->where('role', User::ROLE_STAFF)->count());
+        $this->assertSame(18, User::query()->where('role', User::ROLE_STAFF)->count());
         $this->assertSame(3, User::query()->where('role', User::ROLE_ADMIN)->count());
 
         $this->assertDatabaseHas('users', [
@@ -52,6 +52,13 @@ class DatabaseSeederTest extends TestCase
             'email' => 'staff.finance@campusconnect.test',
             'role' => User::ROLE_STAFF,
         ]);
+
+        Department::query()
+            ->withCount('staffMembers')
+            ->get()
+            ->each(function (Department $department): void {
+                $this->assertSame(3, $department->staff_members_count, $department->name.' should have exactly 3 staff accounts.');
+            });
 
         $this->assertGreaterThanOrEqual(11, ServiceCategory::query()->count());
         $this->assertGreaterThanOrEqual(100, ServiceRequest::query()->count());

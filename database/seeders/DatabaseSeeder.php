@@ -28,8 +28,10 @@ class DatabaseSeeder extends Seeder
             $categories,
             User::query()
                 ->where('role', User::ROLE_STAFF)
+                ->orderBy('email')
                 ->get()
-                ->keyBy('department_id')
+                ->groupBy('department_id')
+                ->map(fn ($staffMembers) => $staffMembers->first())
                 ->all(),
         );
     }
@@ -96,12 +98,24 @@ class DatabaseSeeder extends Seeder
     private function seedStaff(array $categories): void
     {
         $staffDefinitions = [
-            ['email' => 'staff@campusconnect.test', 'name' => 'IT Staff', 'category' => 'it.support'],
-            ['email' => 'staff.maintenance@campusconnect.test', 'name' => 'Maintenance Staff', 'category' => 'maintenance.facility'],
-            ['email' => 'staff.registrar@campusconnect.test', 'name' => 'Registrar Staff', 'category' => 'registrar.document'],
-            ['email' => 'staff.finance@campusconnect.test', 'name' => 'Finance Staff', 'category' => 'finance.payment'],
-            ['email' => 'staff.library@campusconnect.test', 'name' => 'Library Staff', 'category' => 'library.document'],
-            ['email' => 'staff.affairs@campusconnect.test', 'name' => 'Student Affairs Staff', 'category' => 'student-affairs.inquiry'],
+            ['email' => 'staff@campusconnect.test', 'name' => 'Avery Brooks', 'category' => 'it.support'],
+            ['email' => 'staff.it2@campusconnect.test', 'name' => 'Maya Hassan', 'category' => 'it.support'],
+            ['email' => 'staff.it3@campusconnect.test', 'name' => 'Daniel Ortiz', 'category' => 'it.support'],
+            ['email' => 'staff.maintenance@campusconnect.test', 'name' => 'Layla Foster', 'category' => 'maintenance.facility'],
+            ['email' => 'staff.maintenance2@campusconnect.test', 'name' => 'Owen Carter', 'category' => 'maintenance.facility'],
+            ['email' => 'staff.maintenance3@campusconnect.test', 'name' => 'Sara Nguyen', 'category' => 'maintenance.facility'],
+            ['email' => 'staff.registrar@campusconnect.test', 'name' => 'Elena Price', 'category' => 'registrar.document'],
+            ['email' => 'staff.registrar2@campusconnect.test', 'name' => 'Noah Bennett', 'category' => 'registrar.document'],
+            ['email' => 'staff.registrar3@campusconnect.test', 'name' => 'Hana Malik', 'category' => 'registrar.document'],
+            ['email' => 'staff.finance@campusconnect.test', 'name' => 'Lucas Reed', 'category' => 'finance.payment'],
+            ['email' => 'staff.finance2@campusconnect.test', 'name' => 'Zara Ali', 'category' => 'finance.payment'],
+            ['email' => 'staff.finance3@campusconnect.test', 'name' => 'Ethan Cole', 'category' => 'finance.payment'],
+            ['email' => 'staff.library@campusconnect.test', 'name' => 'Mila Harper', 'category' => 'library.document'],
+            ['email' => 'staff.library2@campusconnect.test', 'name' => 'Jonah Blake', 'category' => 'library.document'],
+            ['email' => 'staff.library3@campusconnect.test', 'name' => 'Nadia Saeed', 'category' => 'library.document'],
+            ['email' => 'staff.affairs@campusconnect.test', 'name' => 'Olivia Grant', 'category' => 'student-affairs.inquiry'],
+            ['email' => 'staff.affairs2@campusconnect.test', 'name' => 'Yousef Karim', 'category' => 'student-affairs.inquiry'],
+            ['email' => 'staff.affairs3@campusconnect.test', 'name' => 'Emma Sullivan', 'category' => 'student-affairs.inquiry'],
         ];
 
         foreach ($staffDefinitions as $definition) {

@@ -32,175 +32,242 @@
             @endif
 
             <section class="hero-card">
-                <h1>{{ $serviceRequest->title }}</h1>
-                <p>
-                    Review the details, update the status, and reply in the request conversation for {{ $serviceRequest->departmentName() }}.
-                </p>
+                <p class="eyebrow">Department Ticket</p>
 
-                <div class="stat-row">
-                    <div class="stat-box">
+                <div class="hero-row">
+                    <div>
+                        <h1>{{ $serviceRequest->title }}</h1>
+                        <p>
+                            Ticket #{{ $serviceRequest->id }} was submitted to {{ $serviceRequest->departmentName() }} by
+                            <strong>{{ $serviceRequest->user->name }}</strong>. Only this department team can review the record,
+                            change the workflow, and reply to the student.
+                        </p>
+                    </div>
+
+                    <div class="hero-chip-row">
+                        <a href="{{ route('staff.dashboard') }}" class="button button-secondary">Back to Queue</a>
+                    </div>
+                </div>
+
+                <div class="ticket-summary-grid">
+                    <article class="ticket-summary-card">
                         <span class="stat-kicker">Department</span>
-                        <strong class="placeholder-value">{{ $serviceRequest->departmentName() }}</strong>
-                        <span>Assigned team</span>
-                    </div>
+                        <div class="ticket-summary-value">{{ $serviceRequest->departmentName() }}</div>
+                        <span class="ticket-summary-meta">Assigned department</span>
+                    </article>
 
-                    <div class="stat-box">
+                    <article class="ticket-summary-card">
                         <span class="stat-kicker">Category</span>
-                        <strong class="placeholder-value">{{ $serviceRequest->categoryName() }}</strong>
-                        <span>Request type</span>
-                    </div>
+                        <div class="ticket-summary-value">{{ $serviceRequest->categoryName() }}</div>
+                        <span class="ticket-summary-meta">Student-selected category</span>
+                    </article>
 
-                    <div class="stat-box">
+                    <article class="ticket-summary-card">
                         <span class="stat-kicker">Status</span>
-                        <strong class="placeholder-value">
+                        <div class="ticket-summary-value">
                             <span class="status-badge {{ $statusClasses[$serviceRequest->status] ?? 'status-pending' }}">
                                 {{ $serviceRequest->statusLabel() }}
                             </span>
-                        </strong>
-                        <span>Current state</span>
-                    </div>
+                        </div>
+                        <span class="ticket-summary-meta">Current workflow state</span>
+                    </article>
+
+                    <article class="ticket-summary-card">
+                        <span class="stat-kicker">Priority</span>
+                        <div class="ticket-summary-value">
+                            <span class="priority-badge {{ $serviceRequest->is_urgent ? 'priority-urgent' : 'priority-standard' }}">
+                                {{ $serviceRequest->is_urgent ? 'Urgent' : 'Standard' }}
+                            </span>
+                        </div>
+                        <span class="ticket-summary-meta">Submitted request priority</span>
+                    </article>
                 </div>
             </section>
 
             <section class="panel-grid">
-                <article class="panel">
-                    <div class="panel-header">
-                        <h2>Details</h2>
-                        <a href="{{ route('staff.dashboard') }}" class="text-link">Back to Queue</a>
-                    </div>
+                <div class="panel-stack">
+                    <article class="panel">
+                        <div class="panel-header">
+                            <h2>Request Record</h2>
+                            <span>Updated {{ $serviceRequest->updated_at->diffForHumans() }}</span>
+                        </div>
 
-                    <div class="table-wrap">
-                        <table>
-                            <tbody>
-                                <tr>
-                                    <th>Submitted By</th>
-                                    <td>{{ $serviceRequest->user->name }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Submitted On</th>
-                                    <td>{{ $serviceRequest->created_at->format('M d, Y h:i A') }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Last Updated</th>
-                                    <td>{{ $serviceRequest->updated_at->format('M d, Y h:i A') }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Description</th>
-                                    <td>{{ $serviceRequest->description }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Current Notes</th>
-                                    <td>{{ $serviceRequest->staff_notes ?: 'No staff notes have been saved yet.' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Resolved On</th>
-                                    <td>{{ $serviceRequest->resolved_at?->format('M d, Y h:i A') ?? 'This request is not completed yet.' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Attachment</th>
-                                    <td>
-                                        @if ($serviceRequest->attachment_path)
-                                            <a href="{{ route('staff.requests.attachment', $serviceRequest) }}" class="text-link">
-                                                Download {{ $serviceRequest->attachment_original_name ?? 'attachment file' }}
-                                            </a>
-                                        @else
-                                            No attachment was uploaded with this request.
-                                        @endif
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </article>
+                        <div class="detail-grid">
+                            <div class="detail-card">
+                                <span class="stat-kicker">Submitted By</span>
+                                <strong>{{ $serviceRequest->user->name }}</strong>
+                                <span>{{ $serviceRequest->user->email }}</span>
+                            </div>
 
-                <article class="panel">
-                    <h2>Update</h2>
-                    <p class="section-note">
-                        Save the latest status and notes for the student.
-                    </p>
+                            <div class="detail-card">
+                                <span class="stat-kicker">Submitted On</span>
+                                <strong>{{ $serviceRequest->created_at->format('M d, Y') }}</strong>
+                                <span>{{ $serviceRequest->created_at->format('h:i A') }}</span>
+                            </div>
 
-                    <form method="POST" action="{{ route('staff.requests.update', $serviceRequest) }}">
-                        @csrf
-                        @method('PATCH')
+                            <div class="detail-card">
+                                <span class="stat-kicker">Last Updated</span>
+                                <strong>{{ $serviceRequest->updated_at->format('M d, Y') }}</strong>
+                                <span>{{ $serviceRequest->updated_at->format('h:i A') }}</span>
+                            </div>
 
-                        <div class="form-group">
-                            <label for="status">Status</label>
-                            <select id="status" name="status" required>
-                                @foreach ($statuses as $status)
-                                    <option value="{{ $status }}" @selected(old('status', $serviceRequest->status) === $status)>
-                                        {{ ucwords(str_replace('_', ' ', $status)) }}
-                                    </option>
+                            <div class="detail-card">
+                                <span class="stat-kicker">Resolved On</span>
+                                <strong>{{ $serviceRequest->resolved_at?->format('M d, Y') ?? 'Not completed yet' }}</strong>
+                                <span>{{ $serviceRequest->resolved_at?->format('h:i A') ?? 'Completion timestamp appears here when closed.' }}</span>
+                            </div>
+                        </div>
+
+                        <div class="panel-slab">
+                            <span class="stat-kicker">Student Description</span>
+                            <strong>Issue Summary</strong>
+                            <span>{{ $serviceRequest->description }}</span>
+                        </div>
+
+                        <div class="panel-slab">
+                            <span class="stat-kicker">Staff Notes</span>
+                            <strong>Internal Handling Notes</strong>
+                            <span>{{ $serviceRequest->staff_notes ?: 'No staff notes have been saved yet.' }}</span>
+                        </div>
+
+                        <div class="panel-slab">
+                            <span class="stat-kicker">Attachment</span>
+                            <strong>Submitted File</strong>
+                            <span>
+                                @if ($serviceRequest->attachment_path)
+                                    <a href="{{ route('staff.requests.attachment', $serviceRequest) }}" class="text-link">
+                                        Download {{ $serviceRequest->attachment_original_name ?? 'attachment file' }}
+                                    </a>
+                                @else
+                                    No attachment was uploaded with this request.
+                                @endif
+                            </span>
+                        </div>
+                    </article>
+
+                    <article class="panel">
+                        <div class="panel-header">
+                            <h2>Request Conversation</h2>
+                            <span>{{ $serviceRequest->messages->count() }} replies</span>
+                        </div>
+
+                        <p class="section-note">
+                            Use the conversation for student-facing updates, clarifications, and follow-up questions.
+                        </p>
+
+                        @if ($serviceRequest->messages->isEmpty())
+                            <div class="empty-state">
+                                No conversation replies have been posted yet. Add the first reply below to start the thread with the student.
+                            </div>
+                        @else
+                            <div class="timeline">
+                                @foreach ($serviceRequest->messages as $message)
+                                    <article class="timeline-item {{ $messageClasses[$message->author_role] ?? 'timeline-item-student' }}">
+                                        <div class="timeline-item-header">
+                                            <div>
+                                                <span class="timeline-author">{{ $message->author_name }}</span>
+                                                <span class="timeline-role">{{ $message->roleLabel() }}</span>
+                                            </div>
+                                            <span class="timeline-time">{{ $message->created_at->format('M d, Y h:i A') }}</span>
+                                        </div>
+
+                                        <p class="timeline-message">{{ $message->message }}</p>
+                                    </article>
                                 @endforeach
-                            </select>
-                        </div>
+                            </div>
+                        @endif
 
-                        <div class="form-group">
-                            <label for="staff_notes">Staff Notes</label>
-                            <textarea
-                                id="staff_notes"
-                                name="staff_notes"
-                                placeholder="Write the latest update, actions taken, or what the student should expect next"
-                            >{{ old('staff_notes', $serviceRequest->staff_notes) }}</textarea>
-                            <span class="field-help">Completed requests automatically record the completion timestamp.</span>
-                        </div>
+                        <form method="POST" action="{{ route('staff.requests.messages.store', $serviceRequest) }}">
+                            @csrf
 
-                        <div class="form-actions">
-                            <button type="submit" class="button button-primary">Save Update</button>
-                        </div>
-                    </form>
-                </article>
-            </section>
+                            <div class="form-group">
+                                <label for="message">Add Reply</label>
+                                <textarea
+                                    id="message"
+                                    name="message"
+                                    placeholder="Share a progress update, ask the student a question, or note the next action you need from them"
+                                    required
+                                >{{ old('message') }}</textarea>
+                                <span class="field-help">Use workflow status for internal handling and the conversation thread for student-facing updates.</span>
+                            </div>
 
-            <section class="panel" style="margin-top: 22px;">
-                <div class="panel-header">
-                    <h2>Request Conversation</h2>
-                    <span>{{ $serviceRequest->messages->count() }} replies</span>
+                            <div class="form-actions">
+                                <button type="submit" class="button button-primary">Post Reply</button>
+                            </div>
+                        </form>
+                    </article>
                 </div>
 
-                <p class="section-note">
-                    Post updates here when you need to ask the student for clarification or give progress information outside the status field.
-                </p>
+                <aside class="aside-stack">
+                    <article class="panel">
+                        <h2>Update Workflow</h2>
+                        <p class="section-note">
+                            Save the latest status, priority, and handling notes for the department team.
+                        </p>
 
-                @if ($serviceRequest->messages->isEmpty())
-                    <div class="empty-state">
-                        No conversation replies have been posted yet. Add the first reply below to start the thread with the student.
-                    </div>
-                @else
-                    <div class="timeline">
-                        @foreach ($serviceRequest->messages as $message)
-                            <article class="timeline-item {{ $messageClasses[$message->author_role] ?? 'timeline-item-student' }}">
-                                <div class="timeline-item-header">
-                                    <div>
-                                        <span class="timeline-author">{{ $message->author_name }}</span>
-                                        <span class="timeline-role">{{ $message->roleLabel() }}</span>
-                                    </div>
-                                    <span class="timeline-time">{{ $message->created_at->format('M d, Y h:i A') }}</span>
-                                </div>
+                        <form method="POST" action="{{ route('staff.requests.update', $serviceRequest) }}">
+                            @csrf
+                            @method('PATCH')
 
-                                <p class="timeline-message">{{ $message->message }}</p>
-                            </article>
-                        @endforeach
-                    </div>
-                @endif
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <select id="status" name="status" required>
+                                    @foreach ($statuses as $status)
+                                        <option value="{{ $status }}" @selected(old('status', $serviceRequest->status) === $status)>
+                                            {{ ucwords(str_replace('_', ' ', $status)) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
 
-                <form method="POST" action="{{ route('staff.requests.messages.store', $serviceRequest) }}">
-                    @csrf
+                            <div class="form-group">
+                                <label for="is_urgent">Priority</label>
+                                <select id="is_urgent" name="is_urgent" required>
+                                    <option value="0" @selected((string) old('is_urgent', (int) $serviceRequest->is_urgent) === '0')>Standard</option>
+                                    <option value="1" @selected((string) old('is_urgent', (int) $serviceRequest->is_urgent) === '1')>Urgent</option>
+                                </select>
+                            </div>
 
-                    <div class="form-group">
-                        <label for="message">Add Reply</label>
-                        <textarea
-                            id="message"
-                            name="message"
-                            placeholder="Share a progress update, ask the student a question, or note the next action you need from them"
-                            required
-                        >{{ old('message') }}</textarea>
-                        <span class="field-help">Use the status selector above for workflow changes and this conversation for back-and-forth updates.</span>
-                    </div>
+                            <div class="form-group">
+                                <label for="staff_notes">Staff Notes</label>
+                                <textarea
+                                    id="staff_notes"
+                                    name="staff_notes"
+                                    placeholder="Write the latest update, actions taken, or what the student should expect next"
+                                >{{ old('staff_notes', $serviceRequest->staff_notes) }}</textarea>
+                                <span class="field-help">Completed requests automatically record the completion timestamp.</span>
+                            </div>
 
-                    <div class="form-actions">
-                        <button type="submit" class="button button-primary">Post Reply</button>
-                    </div>
-                </form>
+                            <div class="form-actions">
+                                <button type="submit" class="button button-primary">Save Update</button>
+                            </div>
+                        </form>
+                    </article>
+
+                    <article class="mini-card">
+                        <h2>Other Department Tickets</h2>
+                        <p class="section-note">
+                            Jump directly to other recent tickets assigned to {{ $serviceRequest->departmentName() }}.
+                        </p>
+
+                        @if ($relatedRequests->isEmpty())
+                            <div class="empty-state">
+                                No other recent tickets are available for this department.
+                            </div>
+                        @else
+                            <ul class="compact-list">
+                                @foreach ($relatedRequests as $relatedRequest)
+                                    <li>
+                                        <a href="{{ route('staff.requests.show', $relatedRequest) }}" class="list-title">{{ $relatedRequest->title }}</a>
+                                        <span class="list-meta">
+                                            {{ $relatedRequest->user->name }} | {{ $relatedRequest->categoryName() }} | {{ $relatedRequest->updated_at->diffForHumans() }}
+                                        </span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </article>
+                </aside>
             </section>
         </div>
     </main>

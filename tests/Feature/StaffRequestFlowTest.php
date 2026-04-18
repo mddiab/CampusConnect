@@ -95,6 +95,7 @@ class StaffRequestFlowTest extends TestCase
             ->actingAs($staff)
             ->patch(route('staff.requests.update', $serviceRequest), [
                 'status' => ServiceRequest::STATUS_IN_PROGRESS,
+                'is_urgent' => true,
                 'staff_notes' => 'The network team is tracing the failed switch connection.',
             ]);
 
@@ -103,7 +104,50 @@ class StaffRequestFlowTest extends TestCase
         $this->assertDatabaseHas('service_requests', [
             'id' => $serviceRequest->id,
             'status' => ServiceRequest::STATUS_IN_PROGRESS,
+            'is_urgent' => true,
             'staff_notes' => 'The network team is tracing the failed switch connection.',
+        ]);
+    }
+
+    public function test_staff_can_change_priority_for_their_department_ticket(): void
+    {
+        $department = Department::query()
+            ->where('name', 'Maintenance')
+            ->firstOrFail();
+
+        $category = ServiceCategory::query()
+            ->where('name', 'Facility Maintenance')
+            ->where('department_id', $department->id)
+            ->firstOrFail();
+
+        $staff = User::factory()->create([
+            'role' => User::ROLE_STAFF,
+            'department_id' => $department->id,
+        ]);
+
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        $serviceRequest = ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+            'service_category_id' => $category->id,
+            'is_urgent' => false,
+        ]);
+
+        $response = $this
+            ->actingAs($staff)
+            ->patch(route('staff.requests.update', $serviceRequest), [
+                'status' => $serviceRequest->status,
+                'is_urgent' => true,
+                'staff_notes' => 'Priority escalated after the student reported a worsening classroom issue.',
+            ]);
+
+        $response->assertRedirect(route('staff.requests.show', $serviceRequest));
+
+        $this->assertDatabaseHas('service_requests', [
+            'id' => $serviceRequest->id,
+            'is_urgent' => true,
         ]);
     }
 
@@ -140,6 +184,7 @@ class StaffRequestFlowTest extends TestCase
             ->actingAs($staff)
             ->patch(route('staff.requests.update', $serviceRequest), [
                 'status' => ServiceRequest::STATUS_COMPLETED,
+                'is_urgent' => false,
                 'staff_notes' => 'This should not be allowed.',
             ]);
 
@@ -263,5 +308,49 @@ class StaffRequestFlowTest extends TestCase
             ->get(route('staff.requests.attachment', $serviceRequest));
 
         $response->assertOk();
+    }
+
+    public function test_staff_dashboard_can_filter_urgent_requests_for_their_department(): void
+    {
+        $department = Department::query()
+            ->where('name', 'Information Technology')
+            ->firstOrFail();
+
+        $category = ServiceCategory::query()
+            ->where('name', 'Technical Support')
+            ->where('department_id', $department->id)
+            ->firstOrFail();
+
+        $staff = User::factory()->create([
+            'role' => User::ROLE_STAFF,
+            'department_id' => $department->id,
+        ]);
+
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+            'service_category_id' => $category->id,
+            'title' => 'Urgent network outage',
+            'is_urgent' => true,
+        ]);
+
+        ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+            'service_category_id' => $category->id,
+            'title' => 'Routine software install',
+            'is_urgent' => false,
+        ]);
+
+        $response = $this
+            ->actingAs($staff)
+            ->get(route('staff.dashboard', ['priority' => 'urgent']));
+
+        $response
+            ->assertOk()
+            ->assertSee('Urgent network outage')
+            ->assertDontSee('Routine software install');
     }
 }

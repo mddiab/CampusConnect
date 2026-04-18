@@ -380,7 +380,7 @@
                 </div>
 
                 <p class="info-note">
-                    Staff accounts require a department assignment. Student and admin accounts do not.
+                    Staff accounts require a department assignment, and each department is capped at 3 staff logins. Student and admin accounts do not require a department.
                 </p>
 
                 <form method="GET" action="{{ route('admin.dashboard') }}" class="admin-toolbar">

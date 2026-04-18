@@ -93,6 +93,7 @@ class ServiceRequest extends Model
     protected function casts(): array
     {
         return [
+            'is_urgent' => 'boolean',
             'resolved_at' => 'datetime',
         ];
     }

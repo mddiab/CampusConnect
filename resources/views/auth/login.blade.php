@@ -4,25 +4,12 @@
 
 @section('content')
     <main class="auth-shell">
-        <div class="auth-grid">
-            <section class="auth-hero">
-                <p class="eyebrow">CampusConnect</p>
-                <h1>Campus support, with less confusion and a clearer path.</h1>
-                <p>
-                    Sign in once and land in the right workspace immediately. Students can submit requests,
-                    staff can review and update them, and admins can manage the whole system from one place.
-                </p>
-
-                <ul>
-                    <li>Students get a simple request form, request history, and clear status updates.</li>
-                    <li>Staff get a filtered queue for their department with notes and progress controls.</li>
-                    <li>Admins get user management, category management, and reporting tools.</li>
-                </ul>
-            </section>
-
-            <section class="auth-card">
-                <h2>Welcome Back</h2>
-                <p>Use a seeded demo account or your own campus credentials to enter the correct dashboard.</p>
+        <div class="auth-grid auth-grid-compact">
+            <section class="auth-card auth-card-minimal">
+                <div class="auth-card-intro">
+                    <p class="eyebrow">CampusConnect</p>
+                    <h1>Login</h1>
+                </div>
 
                 @if ($errors->any())
                     <div class="error-box">
@@ -30,7 +17,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('login.store') }}">
+                <form method="POST" action="{{ route('login.store') }}" class="auth-form">
                     @csrf
 
                     <div class="form-group">
@@ -40,9 +27,10 @@
                             type="email"
                             name="email"
                             value="{{ old('email') }}"
-                            placeholder="Enter the user's university email address here"
+                            placeholder="name@campus.edu"
                             required
                             autofocus
+                            autocomplete="username"
                         >
                     </div>
 
@@ -52,28 +40,33 @@
                             id="password"
                             type="password"
                             name="password"
-                            placeholder="Enter the user's account password here"
+                            placeholder="Enter your password"
                             required
+                            autocomplete="current-password"
                         >
                     </div>
 
                     <div class="remember-row">
-                        <div class="checkbox-wrap">
+                        <label for="remember" class="checkbox-wrap">
                             <input id="remember" type="checkbox" name="remember">
-                            <label for="remember">Remember me</label>
-                        </div>
+                            <span class="checkbox-indicator" aria-hidden="true"></span>
+                            <span class="checkbox-text">Remember me</span>
+                        </label>
                     </div>
 
-                    <button type="submit" class="button button-primary" style="width: 100%;">Login to Dashboard</button>
+                    <button type="submit" class="button button-primary auth-submit">Login</button>
                 </form>
 
-                <div class="demo-box">
-                    <h3>Demo Accounts</h3>
-                    <p><strong>Student sample:</strong> student@campusconnect.test / password</p>
-                    <p><strong>Staff sample:</strong> staff@campusconnect.test / password</p>
-                    <p><strong>Admin sample:</strong> admin@campusconnect.test / password</p>
-                    <p>Additional seeded users include student2-student10, admin2-admin3, and one staff account for every department.</p>
-                </div>
+                @if (app()->environment(['local', 'testing']))
+                    <details class="auth-devnote">
+                        <summary>Local Demo Accounts</summary>
+                        <div class="auth-devnote-body">
+                            <p><strong>Student:</strong> student@campusconnect.test / password</p>
+                            <p><strong>Staff:</strong> staff@campusconnect.test / password</p>
+                            <p><strong>Admin:</strong> admin@campusconnect.test / password</p>
+                        </div>
+                    </details>
+                @endif
             </section>
         </div>
     </main>

@@ -17,27 +17,72 @@ class StaffRequestController extends Controller
     {
         $staff = $request->user()->loadMissing('department');
         $selectedStatus = $request->string('status')->toString();
+        $selectedPriority = $request->string('priority')->toString();
+        $searchTerm = trim($request->string('search')->toString());
 
         if (! in_array($selectedStatus, ['all', ...ServiceRequest::statuses()], true)) {
             $selectedStatus = 'all';
         }
 
-        $serviceRequests = collect();
+        if (! in_array($selectedPriority, ['all', 'urgent', 'standard'], true)) {
+            $selectedPriority = 'all';
+        }
+
+        $serviceRequests = null;
+        $recentRequests = collect();
         $pendingRequestCount = 0;
         $inProgressRequestCount = 0;
         $completedRequestCount = 0;
+        $urgentRequestCount = 0;
+        $filteredRequestCount = 0;
 
         if ($staff->department_id) {
             $departmentRequests = ServiceRequest::query()
                 ->with(['user', 'department', 'serviceCategory'])
                 ->forDepartment($staff->department_id);
 
-            $serviceRequests = (clone $departmentRequests)
+            $filteredRequestQuery = (clone $departmentRequests)
                 ->when(
                     $selectedStatus !== 'all',
                     fn (Builder $query) => $query->where('status', $selectedStatus),
                 )
+                ->when(
+                    $selectedPriority === 'urgent',
+                    fn (Builder $query) => $query->where('is_urgent', true),
+                )
+                ->when(
+                    $selectedPriority === 'standard',
+                    fn (Builder $query) => $query->where(function (Builder $priorityQuery): void {
+                        $priorityQuery
+                            ->where('is_urgent', false)
+                            ->orWhereNull('is_urgent');
+                    }),
+                )
+                ->when(
+                    $searchTerm !== '',
+                    function (Builder $query) use ($searchTerm): void {
+                        $query->where(function (Builder $searchQuery) use ($searchTerm): void {
+                            $searchQuery
+                                ->where('title', 'like', "%{$searchTerm}%")
+                                ->orWhere('description', 'like', "%{$searchTerm}%")
+                                ->orWhereHas('user', function (Builder $userQuery) use ($searchTerm): void {
+                                    $userQuery
+                                        ->where('name', 'like', "%{$searchTerm}%")
+                                        ->orWhere('email', 'like', "%{$searchTerm}%");
+                                })
+                                ->orWhereHas('serviceCategory', fn (Builder $categoryQuery) => $categoryQuery->where('name', 'like', "%{$searchTerm}%"));
+                        });
+                    },
+                );
+
+            $filteredRequests = (clone $filteredRequestQuery)
                 ->latest()
+                ->paginate(12)
+                ->withQueryString();
+
+            $recentRequests = (clone $filteredRequestQuery)
+                ->latest()
+                ->take(4)
                 ->get();
 
             $pendingRequestCount = (clone $departmentRequests)
@@ -51,17 +96,27 @@ class StaffRequestController extends Controller
             $completedRequestCount = (clone $departmentRequests)
                 ->where('status', ServiceRequest::STATUS_COMPLETED)
                 ->count();
+
+            $urgentRequestCount = (clone $departmentRequests)
+                ->where('is_urgent', true)
+                ->count();
+
+            $filteredRequestCount = $filteredRequests->total();
+            $serviceRequests = $filteredRequests;
         }
 
         return view('dashboards.staff', [
             'department' => $staff->department,
             'serviceRequests' => $serviceRequests,
-            'recentRequests' => $serviceRequests->take(3),
+            'recentRequests' => $recentRequests,
             'pendingRequestCount' => $pendingRequestCount,
             'inProgressRequestCount' => $inProgressRequestCount,
             'completedRequestCount' => $completedRequestCount,
-            'filteredRequestCount' => $serviceRequests->count(),
+            'urgentRequestCount' => $urgentRequestCount,
+            'filteredRequestCount' => $filteredRequestCount,
             'selectedStatus' => $selectedStatus,
+            'selectedPriority' => $selectedPriority,
+            'searchTerm' => $searchTerm,
         ]);
     }
 
@@ -76,9 +131,18 @@ class StaffRequestController extends Controller
             'messages' => fn ($query) => $query->oldest(),
         ]);
 
+        $departmentRequests = ServiceRequest::query()
+            ->with(['user', 'serviceCategory'])
+            ->forDepartment($serviceRequest->department_id);
+
         return view('staff.requests.show', [
             'serviceRequest' => $serviceRequest,
             'statuses' => ServiceRequest::statuses(),
+            'relatedRequests' => (clone $departmentRequests)
+                ->whereKeyNot($serviceRequest->id)
+                ->latest()
+                ->take(4)
+                ->get(),
         ]);
     }
 
@@ -105,6 +169,7 @@ class StaffRequestController extends Controller
 
         $validated = $request->validate([
             'status' => ['required', 'string', Rule::in(ServiceRequest::statuses())],
+            'is_urgent' => ['required', 'boolean'],
             'staff_notes' => ['nullable', 'string', 'max:5000'],
         ]);
 

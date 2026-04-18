@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
@@ -163,6 +164,10 @@ class AdminController extends Controller
             'password' => 'required|string|min:8',
         ]);
 
+        if ($validated['role'] === User::ROLE_STAFF) {
+            $this->ensureDepartmentHasStaffCapacity((int) $validated['department_id']);
+        }
+
         User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -187,6 +192,10 @@ class AdminController extends Controller
                 Rule::requiredIf(fn () => $request->input('role') === User::ROLE_STAFF),
             ],
         ]);
+
+        if ($validated['role'] === User::ROLE_STAFF) {
+            $this->ensureDepartmentHasStaffCapacity((int) $validated['department_id'], $user);
+        }
 
         $user->update([
             'name' => $validated['name'],
@@ -369,5 +378,20 @@ class AdminController extends Controller
         }
 
         return null;
+    }
+
+    private function ensureDepartmentHasStaffCapacity(int $departmentId, ?User $ignoreUser = null): void
+    {
+        $staffCount = User::query()
+            ->where('role', User::ROLE_STAFF)
+            ->where('department_id', $departmentId)
+            ->when($ignoreUser, fn ($query) => $query->whereKeyNot($ignoreUser->id))
+            ->count();
+
+        if ($staffCount >= 3) {
+            throw ValidationException::withMessages([
+                'department_id' => 'Each department can have a maximum of 3 staff accounts.',
+            ]);
+        }
     }
 }
