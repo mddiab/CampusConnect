@@ -149,7 +149,18 @@
                                 data-selected="{{ old('service_category_id') }}"
                                 required
                             >
-                                <option value="">Select a department first</option>
+                                <option value="">Select a category</option>
+                                @foreach ($departments as $department)
+                                    @foreach ($department->categories as $category)
+                                        <option
+                                            value="{{ $category->id }}"
+                                            data-department-id="{{ $department->id }}"
+                                            @selected((string) old('service_category_id') === (string) $category->id)
+                                        >
+                                            {{ $category->name }}
+                                        </option>
+                                    @endforeach
+                                @endforeach
                             </select>
                             <span class="field-help">Only categories that belong to the selected department are shown here.</span>
                         </div>
@@ -394,7 +405,6 @@
 
     <script>
         (() => {
-            const categoriesByDepartment = @json($categoriesByDepartment);
             const departmentSelect = document.getElementById('department_id');
             const categorySelect = document.getElementById('service_category_id');
 
@@ -402,9 +412,17 @@
                 return;
             }
 
+            const allCategoryOptions = Array.from(categorySelect.querySelectorAll('option[data-department-id]')).map((option) => ({
+                value: option.value,
+                label: option.textContent,
+                departmentId: option.dataset.departmentId,
+            }));
+
             const renderCategories = (selectedCategoryId = categorySelect.dataset.selected || '') => {
                 const departmentId = departmentSelect.value;
-                const categories = categoriesByDepartment[departmentId] ?? [];
+                const categories = departmentId
+                    ? allCategoryOptions.filter((category) => String(category.departmentId) === String(departmentId))
+                    : allCategoryOptions;
 
                 categorySelect.innerHTML = '';
 
@@ -412,16 +430,16 @@
                 placeholder.value = '';
                 placeholder.textContent = departmentId
                     ? 'Select the category that best matches the request'
-                    : 'Select a department first';
+                    : 'Select a category';
 
                 categorySelect.appendChild(placeholder);
 
                 categories.forEach((category) => {
                     const option = document.createElement('option');
-                    option.value = String(category.id);
-                    option.textContent = category.name;
+                    option.value = String(category.value);
+                    option.textContent = category.label;
 
-                    if (String(category.id) === String(selectedCategoryId)) {
+                    if (String(category.value) === String(selectedCategoryId)) {
                         option.selected = true;
                     }
 
@@ -432,6 +450,7 @@
             };
 
             departmentSelect.addEventListener('change', () => renderCategories(''));
+            departmentSelect.addEventListener('input', () => renderCategories(''));
 
             renderCategories();
         })();
