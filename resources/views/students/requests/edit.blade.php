@@ -9,11 +9,6 @@
                 </div>
             @endif
 
-            <section class="hero-card">
-                <h1>Edit Request: {{ $serviceRequest->title }}</h1>
-                <p>Update the details of your pending request below.</p>
-            </section>
-
             <section class="panel" style="margin-top: 22px;">
                 <h2>Edit Request Details</h2>
                 <p class="section-note">
@@ -73,7 +68,7 @@
                             {{ old('is_urgent', $serviceRequest->is_urgent) ? 'checked' : '' }}
                         >
                         <label for="is_urgent" style="margin: 0; cursor: pointer;">
-                            <strong>🚨 Mark as Urgent</strong> - Check this if your request needs priority attention
+                            <strong>🚨 Mark as Urgent</strong>
                         </label>
                     </div>
 

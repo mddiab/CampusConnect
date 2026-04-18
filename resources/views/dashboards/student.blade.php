@@ -56,14 +56,26 @@
                 </div>
             </section>
 
-            <section class="page-grid">
+            <section class="dashboard-duo-grid">
                 <article class="mini-card">
-                    <h2>Student Tools</h2>
-                    <ul>
-                        <li><a href="#request-form" class="text-link">Submit a new service request.</a></li>
-                        <li><a href="#request-history" class="text-link">Review all previously submitted requests.</a></li>
-                        <li>Open any request to read staff notes, status updates, and attachment details.</li>
-                    </ul>
+                    <div class="mini-card-stack">
+                        <section class="mini-card-section">
+                            <h2>Student Tools</h2>
+                            <ul>
+                                <li><a href="#request-form" class="text-link">Submit a new service request.</a></li>
+                                <li><a href="#request-history" class="text-link">Review all previously submitted requests.</a></li>
+                            </ul>
+                        </section>
+
+                        <section class="mini-card-section">
+                            <h2>Before You Submit</h2>
+                            <ul>
+                                <li>Choose the department first so the category list only shows valid options for that team.</li>
+                                <li>Use a short title that clearly explains the issue.</li>
+                                <li>Include location, timing, and any details staff need before they can act.</li>
+                            </ul>
+                        </section>
+                    </div>
                 </article>
 
                 <article class="mini-card">
@@ -72,35 +84,33 @@
                     @if ($recentRequests->isEmpty())
                         <p>No recent activity yet. Once you submit a request, the latest updates will appear here.</p>
                     @else
-                        <ul>
+                        <ul class="compact-list">
                             @foreach ($recentRequests as $serviceRequest)
                                 <li>
-                                    <strong>{{ $serviceRequest->title }}</strong><br>
-                                    {{ $serviceRequest->departmentName() }} /
-                                    {{ $serviceRequest->categoryName() }}.
-                                    Current status: {{ $serviceRequest->statusLabel() }}.
+                                    <a href="{{ route('student.requests.show', $serviceRequest) }}" class="list-title text-link">
+                                        {{ $serviceRequest->title }}
+                                    </a>
+                                    <span class="list-meta">
+                                        {{ $serviceRequest->departmentName() }} / {{ $serviceRequest->categoryName() }}
+                                    </span>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                                        <span class="status-badge {{ $statusClasses[$serviceRequest->status] ?? 'status-pending' }}">
+                                            {{ $serviceRequest->statusLabel() }}
+                                        </span>
+                                        <span class="list-meta" style="margin-top: 0;">
+                                            Updated {{ $serviceRequest->updated_at->diffForHumans() }}
+                                        </span>
+                                    </div>
                                 </li>
                             @endforeach
                         </ul>
                     @endif
                 </article>
-
-                <article class="mini-card">
-                    <h2>Before You Submit</h2>
-                    <ul>
-                        <li>Choose the department first so the category list only shows valid options for that team.</li>
-                        <li>Use a short title that clearly explains the issue.</li>
-                        <li>Include location, timing, and any details staff need before they can act.</li>
-                    </ul>
-                </article>
             </section>
 
-            <section class="panel-grid" style="margin-top: 22px;">
+            <section style="margin-top: 22px;">
                 <article class="panel" id="request-form">
                     <h2>Submit a New Request</h2>
-                    <p class="section-note">
-                        Fill in the details below so the correct department and category are assigned to the request.
-                    </p>
 
                     <form method="POST" action="{{ route('student.requests.store') }}" enctype="multipart/form-data">
                         @csrf
@@ -164,7 +174,7 @@
                                 {{ old('is_urgent') ? 'checked' : '' }}
                             >
                             <label for="is_urgent" style="margin: 0; cursor: pointer;">
-                                <strong>🚨 Mark as Urgent</strong> - Check this if your request needs priority attention
+                                <strong>🚨 Mark as Urgent</strong>
                             </label>
                         </div>
 
@@ -176,22 +186,8 @@
 
                         <div class="form-actions">
                             <button type="submit" class="button button-primary">Submit Request</button>
-                            <span class="muted-text">New requests start with a Pending status.</span>
                         </div>
                     </form>
-                </article>
-
-                <article class="panel">
-                    <h2>Form Guide</h2>
-                    <p class="section-note">
-                        Keep the request direct and specific so staff can understand it quickly.
-                    </p>
-                    <ul>
-                        <li>The category list depends on the selected department, so choose the department first.</li>
-                        <li>The request title should summarize the issue in one short sentence.</li>
-                        <li>The description should include the exact problem, location, and what support is needed.</li>
-                        <li>The attachment is optional and should only be used when a file helps staff verify the issue.</li>
-                    </ul>
                 </article>
             </section>
 
@@ -287,7 +283,7 @@
                         <button type="submit" class="button button-primary" style="padding: 8px 16px; font-size: 14px;">
                             Search & Filter
                         </button>
-                        <a href="{{ route('student.dashboard') }}" class="button" style="padding: 8px 16px; font-size: 14px; background-color: #f3f4f6; text-decoration: none; border-radius: 4px; display: inline-block;">
+                        <a href="{{ route('student.dashboard') }}" class="button button-secondary" style="padding: 8px 16px; font-size: 14px;">
                             Clear Filters
                         </a>
                     </div>
@@ -299,10 +295,6 @@
                         @if (request('search')) matching "{{ request('search') }}"@endif
                     </p>
                 @endif
-
-                <p class="section-note">
-                    This table shows all requests submitted by the logged-in student, from newest to oldest.
-                </p>
 
                 @if ($activeRequests->isEmpty() && $archivedRequests->isEmpty())
                     <div class="empty-state">

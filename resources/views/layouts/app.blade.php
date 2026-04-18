@@ -360,6 +360,13 @@
                 align-items: start;
             }
 
+            .dashboard-duo-grid {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                gap: 18px;
+                align-items: stretch;
+            }
+
             .panel-grid {
                 display: grid;
                 grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.92fr);
@@ -370,6 +377,16 @@
             .mini-card {
                 padding: 24px;
                 height: 100%;
+            }
+
+            .mini-card-stack {
+                display: grid;
+                gap: 18px;
+            }
+
+            .mini-card-section + .mini-card-section {
+                padding-top: 18px;
+                border-top: 1px solid rgba(95, 67, 167, 0.12);
             }
 
             .mini-card h2,
@@ -480,6 +497,31 @@
             .stat-box span {
                 display: block;
                 color: var(--muted);
+            }
+
+            .stat-box .status-badge {
+                display: flex;
+                width: 100%;
+                justify-content: center;
+                text-align: center;
+            }
+
+            .stat-box .status-badge.status-pending {
+                background: rgba(185, 123, 32, 0.1);
+                color: var(--warning);
+                border-color: rgba(185, 123, 32, 0.16);
+            }
+
+            .stat-box .status-badge.status-in-progress {
+                background: rgba(95, 67, 167, 0.1);
+                color: var(--primary);
+                border-color: rgba(95, 67, 167, 0.16);
+            }
+
+            .stat-box .status-badge.status-completed {
+                background: rgba(47, 148, 101, 0.1);
+                color: var(--success);
+                border-color: rgba(47, 148, 101, 0.16);
             }
 
             .placeholder-value {
@@ -627,6 +669,32 @@
 
             input[type="file"] {
                 padding-top: 10px;
+            }
+
+            input[type="file"]::file-selector-button {
+                margin-right: 12px;
+                min-height: 36px;
+                padding: 8px 14px;
+                border: 1px solid rgba(95, 67, 167, 0.24);
+                border-radius: 10px;
+                background: linear-gradient(135deg, #ffffff, #f6f1fc);
+                color: var(--primary);
+                font: inherit;
+                font-size: 0.9rem;
+                font-weight: 700;
+                letter-spacing: 0.01em;
+                cursor: pointer;
+                transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+            }
+
+            input[type="file"]::file-selector-button:hover {
+                border-color: var(--line-strong);
+                box-shadow: 0 10px 20px rgba(63, 40, 111, 0.1);
+                transform: translateY(-1px);
+            }
+
+            input[type="file"]::file-selector-button:active {
+                transform: translateY(0);
             }
 
             textarea {
@@ -1012,6 +1080,7 @@
 
             @media (max-width: 980px) {
                 .auth-grid,
+                .dashboard-duo-grid,
                 .panel-grid,
                 .page-grid,
                 .stat-row {

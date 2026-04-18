@@ -27,10 +27,6 @@
 
             <section class="hero-card">
                 <h1>{{ $serviceRequest->title }}</h1>
-                <p>
-                    This page shows the full information for the selected student request, including its assigned
-                    department, category, current status, description, staff notes, conversation replies, and any attachment.
-                </p>
 
                 <div class="stat-row">
                     <div class="stat-box">
@@ -44,7 +40,7 @@
                     </div>
 
                     <div class="stat-box">
-                        <strong class="placeholder-value">
+                        <strong>
                             <span class="status-badge {{ $statusClasses[$serviceRequest->status] ?? 'status-pending' }}">
                                 {{ $serviceRequest->statusLabel() }}
                             </span>
@@ -68,7 +64,7 @@
                 @endif
             </section>
 
-            <section class="panel-grid">
+            <section style="margin-top: 22px;">
                 <article class="panel">
                     <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
@@ -76,7 +72,7 @@
                         </div>
                         <div style="display: flex; gap: 10px;">
                             @if ($serviceRequest->canBeEditedBy(auth()->user()))
-                                <a href="{{ route('student.requests.edit', $serviceRequest) }}" class="text-link" style="padding: 8px 16px; background-color: #3b82f6; color: white; border-radius: 4px; text-decoration: none; font-weight: 500;">
+                                <a href="{{ route('student.requests.edit', $serviceRequest) }}" class="button button-primary" style="padding: 8px 16px; min-height: 40px; font-size: 14px;">
                                     ✏️ Edit Request
                                 </a>
                             @elseif ($serviceRequest->status !== 'pending')
@@ -84,7 +80,9 @@
                                     Cannot edit ({{ $serviceRequest->statusLabel() }})
                                 </span>
                             @endif
-                            <a href="{{ route('student.dashboard') }}" class="text-link">Back to Dashboard</a>
+                            <a href="{{ route('student.dashboard') }}" class="button button-secondary" style="padding: 8px 16px; min-height: 40px; font-size: 14px;">
+                                Back to Dashboard
+                            </a>
                         </div>
                     </div>
 
@@ -140,15 +138,6 @@
                             </tbody>
                         </table>
                     </div>
-                </article>
-
-                <article class="panel">
-                    <h2>Status Meaning</h2>
-                    <ul>
-                        <li><strong>Pending:</strong> the request was submitted and is waiting for staff review.</li>
-                        <li><strong>In Progress:</strong> the department has started working on the request.</li>
-                        <li><strong>Completed:</strong> the department marked the request as finished.</li>
-                    </ul>
                 </article>
             </section>
 
