@@ -11,6 +11,51 @@
 @endphp
 
 @section('content')
+    <style>
+        .urgent-toggle-input {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            margin: 0;
+            border: 1px solid rgba(95, 67, 167, 0.38);
+            border-radius: 6px;
+            background: #ffffff;
+            display: grid;
+            place-items: center;
+            transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+        }
+
+        .urgent-toggle-input::after {
+            content: '';
+            width: 10px;
+            height: 6px;
+            border-left: 2px solid #ffffff;
+            border-bottom: 2px solid #ffffff;
+            transform: rotate(-45deg) scale(0);
+            transform-origin: center;
+            transition: transform 140ms ease;
+        }
+
+        .urgent-toggle-input:checked {
+            border-color: #dc2626;
+            background: #dc2626;
+            box-shadow: 0 6px 16px rgba(220, 38, 38, 0.18);
+        }
+
+        .urgent-toggle-input:checked::after {
+            transform: rotate(-45deg) scale(1);
+        }
+
+        .urgent-toggle-input:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.16);
+        }
+
+        .urgent-toggle-input:hover {
+            border-color: #dc2626;
+        }
+    </style>
+
     <main class="page">
         <div class="container">
             @if (session('status'))
@@ -182,6 +227,7 @@
                                 id="is_urgent"
                                 name="is_urgent"
                                 value="1"
+                                class="urgent-toggle-input"
                                 {{ old('is_urgent') ? 'checked' : '' }}
                             >
                             <label for="is_urgent" style="margin: 0; cursor: pointer;">
@@ -422,7 +468,19 @@
                 const departmentId = departmentSelect.value;
                 const categories = departmentId
                     ? allCategoryOptions.filter((category) => String(category.departmentId) === String(departmentId))
-                    : allCategoryOptions;
+                    : [];
+
+                const seenCategoryLabels = new Set();
+                const uniqueCategories = categories.filter((category) => {
+                    const key = category.label.trim().toLowerCase();
+
+                    if (seenCategoryLabels.has(key)) {
+                        return false;
+                    }
+
+                    seenCategoryLabels.add(key);
+                    return true;
+                });
 
                 categorySelect.innerHTML = '';
 
@@ -430,11 +488,11 @@
                 placeholder.value = '';
                 placeholder.textContent = departmentId
                     ? 'Select the category that best matches the request'
-                    : 'Select a category';
+                    : 'Select a department first';
 
                 categorySelect.appendChild(placeholder);
 
-                categories.forEach((category) => {
+                uniqueCategories.forEach((category) => {
                     const option = document.createElement('option');
                     option.value = String(category.value);
                     option.textContent = category.label;
@@ -446,7 +504,7 @@
                     categorySelect.appendChild(option);
                 });
 
-                categorySelect.disabled = categories.length === 0;
+                categorySelect.disabled = false;
             };
 
             departmentSelect.addEventListener('change', () => renderCategories(''));
