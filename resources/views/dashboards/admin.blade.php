@@ -441,6 +441,96 @@
         overflow: hidden;
     }
 
+    .stat-box {
+        display: grid;
+        gap: 4px;
+        position: relative;
+        padding: 24px;
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 244, 253, 0.96));
+        border: 1px solid rgba(95, 67, 167, 0.12);
+        transition: transform 220ms ease, border-color 220ms ease;
+    }
+
+    .stat-box:hover {
+        transform: translateY(-4px);
+        border-color: rgba(95, 67, 167, 0.24);
+    }
+
+    .stat-icon {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(95, 67, 167, 0.08), rgba(142, 181, 232, 0.08));
+        color: var(--primary);
+        font-size: 1.3rem;
+        border: 1px solid rgba(95, 67, 167, 0.1);
+    }
+
+    .stat-box strong {
+        font-size: 2.2rem;
+        margin-bottom: 2px;
+        background: linear-gradient(135deg, var(--text), var(--primary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .stat-box span {
+        color: var(--muted);
+        font-size: 0.94rem;
+        line-height: 1.5;
+        max-width: 22ch;
+    }
+
+    .button i, 
+    .btn-sm i {
+        margin-right: 8px;
+        font-size: 0.95em;
+        opacity: 0.9;
+    }
+
+    .category-item,
+    .category-card {
+        transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .category-item:hover,
+    .category-card:hover {
+        transform: translateX(4px);
+        border-color: var(--primary);
+        box-shadow: 0 8px 24px rgba(63, 40, 111, 0.06);
+    }
+
+    .table-wrap tr {
+        transition: background 180ms ease;
+    }
+
+    .table-wrap tbody tr:hover {
+        background: rgba(95, 67, 167, 0.02);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 42px 20px !important;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 16px;
+    }
+
+    .empty-state-ghost {
+        display: block;
+        font-size: 2.5rem;
+        margin-bottom: 16px;
+        opacity: 0.12;
+        color: var(--primary);
+    }
+
     @media (max-width: 720px) {
         .inline-actions {
             flex-direction: column;
@@ -472,6 +562,15 @@
         .modal-header {
             padding-right: 52px;
         }
+
+        .stat-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .stat-icon {
+            position: static;
+            margin-bottom: 12px;
+        }
     }
 </style>
 
@@ -498,14 +597,17 @@
 
             <div class="stat-row">
                 <div class="stat-box">
+                    <div class="stat-icon"><i class="fas fa-users-line"></i></div>
                     <strong>{{ $totalUsers }}</strong>
                     <span>Total user accounts in the system.</span>
                 </div>
                 <div class="stat-box">
+                    <div class="stat-icon"><i class="fas fa-building-columns"></i></div>
                     <strong>{{ $totalDepartments }}</strong>
                     <span>Departments currently available for request routing.</span>
                 </div>
                 <div class="stat-box">
+                    <div class="stat-icon"><i class="fas fa-fire-flame-curved"></i></div>
                     <strong>{{ $todayRequests }}</strong>
                     <span>Requests created today across all departments.</span>
                 </div>
@@ -518,11 +620,11 @@
             </div>
 
             <div class="admin-nav">
-                <a href="#reports-overview" class="button button-plain">Recent Activity</a>
-                <a href="#user-management" class="button button-plain">Users</a>
-                <a href="#department-management" class="button button-plain">Departments</a>
-                <a href="#category-management" class="button button-plain">Categories</a>
-                <a href="{{ route('admin.reports') }}" class="button button-secondary">Full Reports</a>
+                <a href="#reports-overview" class="button button-plain"><i class="fas fa-bolt-lightning"></i> Recent Activity</a>
+                <a href="#user-management" class="button button-plain"><i class="fas fa-user-gear"></i> Users</a>
+                <a href="#department-management" class="button button-plain"><i class="fas fa-landmark"></i> Departments</a>
+                <a href="#category-management" class="button button-plain"><i class="fas fa-layer-group"></i> Categories</a>
+                <a href="{{ route('admin.reports') }}" class="button button-secondary"><i class="fas fa-chart-line"></i> Full Reports</a>
             </div>
         </section>
 
@@ -531,8 +633,8 @@
                 <div class="panel-header">
                     <h2><i class="fas fa-chart-bar"></i> Recent Activity</h2>
                     <div class="inline-actions">
-                        <a href="{{ route('admin.reports') }}" class="button button-plain btn-sm">Open Reports</a>
-                        <a href="{{ route('admin.reports.export', request()->only(['status', 'dept'])) }}" class="button button-secondary btn-sm">Export CSV</a>
+                        <a href="{{ route('admin.reports') }}" class="button button-plain btn-sm"><i class="fas fa-folder-open"></i> Open Reports</a>
+                        <a href="{{ route('admin.reports.export', request()->only(['status', 'dept'])) }}" class="button button-secondary btn-sm"><i class="fas fa-file-export"></i> Export CSV</a>
                     </div>
                 </div>
 
@@ -560,7 +662,10 @@
                             </span>
                         </li>
                     @empty
-                        <li class="empty-state">No recent activity matched the current filters.</li>
+                        <li class="empty-state">
+                            <i class="fas fa-clipboard-list empty-state-ghost"></i>
+                            No recent activity matched the current filters.
+                        </li>
                     @endforelse
                 </ul>
             </article>
@@ -568,7 +673,9 @@
             <article class="panel section-id" id="user-management">
                 <div class="panel-header">
                     <h2><i class="fas fa-users"></i> User Management</h2>
-                    <button type="button" class="button button-primary" onclick="openModal('addUserModal')">Add User</button>
+                    <button type="button" class="button button-primary" onclick="openModal('addUserModal')">
+                        <i class="fas fa-plus"></i> Add User
+                    </button>
                 </div>
 
                 <p class="info-note">
@@ -609,18 +716,25 @@
                                     <td><span class="role-badge">{{ ucfirst($user->role) }}</span></td>
                                     <td>
                                         <div class="inline-actions">
-                                            <button type="button" class="button btn-sm btn-edit" onclick="openModal('editUserModal-{{ $user->id }}')">Edit</button>
+                                            <button type="button" class="button btn-sm btn-edit" onclick="openModal('editUserModal-{{ $user->id }}')">
+                                                <i class="fas fa-pen-to-square"></i> Edit
+                                            </button>
                                             <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="inline-form" onsubmit="return confirm('Delete this user?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="button btn-sm btn-delete">Delete</button>
+                                                <button type="submit" class="button btn-sm btn-delete">
+                                                    <i class="fas fa-trash-can"></i> Delete
+                                                </button>
                                             </form>
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="empty-state">No users matched the current search.</td>
+                                    <td colspan="5" class="empty-state">
+                                        <i class="fas fa-user-slash empty-state-ghost"></i>
+                                        No users matched the current search.
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -631,7 +745,9 @@
             <article class="panel section-id" id="department-management">
                 <div class="panel-header">
                     <h2><i class="fas fa-building"></i> Departments</h2>
-                    <button type="button" class="button button-primary" onclick="openModal('addDepartmentModal')">Add Department</button>
+                    <button type="button" class="button button-primary" onclick="openModal('addDepartmentModal')">
+                        <i class="fas fa-plus"></i> Add Department
+                    </button>
                 </div>
 
                 <p class="info-note">
@@ -658,11 +774,15 @@
                                     <td>{{ $department->service_requests_count }}</td>
                                     <td>
                                         <div class="inline-actions">
-                                            <button type="button" class="button btn-sm btn-edit" onclick="openModal('editDepartmentModal-{{ $department->id }}')">Edit</button>
+                                            <button type="button" class="button btn-sm btn-edit" onclick="openModal('editDepartmentModal-{{ $department->id }}')">
+                                                <i class="fas fa-pen-to-square"></i> Edit
+                                            </button>
                                             <form method="POST" action="{{ route('admin.departments.destroy', $department) }}" class="inline-form" onsubmit="return confirm('Delete this department?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="button btn-sm btn-delete">Delete</button>
+                                                <button type="submit" class="button btn-sm btn-delete">
+                                                    <i class="fas fa-trash-can"></i> Delete
+                                                </button>
                                             </form>
                                         </div>
                                     </td>
@@ -681,7 +801,9 @@
 
                 <div class="panel-header">
                     <h2><i class="fas fa-folder-open"></i> Service Categories</h2>
-                    <button type="button" class="button button-primary" onclick="openModal('addCategoryModal')">Add Category</button>
+                    <button type="button" class="button button-primary" onclick="openModal('addCategoryModal')">
+                        <i class="fas fa-plus"></i> Add Category
+                    </button>
                 </div>
 
                 <p class="info-note">
@@ -730,7 +852,10 @@
                                 </div>
 
                                 @if ($department->categories->isEmpty())
-                                    <div class="empty-state">No categories for this department yet.</div>
+                                    <div class="empty-state">
+                                        <i class="fas fa-folder-open empty-state-ghost"></i>
+                                        No categories for this department yet.
+                                    </div>
                                 @else
                                     <div class="category-card-list">
                                         @foreach ($department->categories as $category)
@@ -746,11 +871,15 @@
                                                 </div>
 
                                                 <div class="category-card-actions">
-                                                    <button type="button" class="button btn-sm btn-edit" onclick="openModal('editCategoryModal-{{ $category->id }}')">Edit</button>
+                                                    <button type="button" class="button btn-sm btn-edit" onclick="openModal('editCategoryModal-{{ $category->id }}')">
+                                                        <i class="fas fa-pen-to-square"></i> Edit
+                                                    </button>
                                                     <form method="POST" action="{{ route('admin.categories.destroy', $category) }}" class="inline-form" onsubmit="return confirm('Delete this category?');">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="button btn-sm btn-delete">Delete</button>
+                                                        <button type="submit" class="button btn-sm btn-delete">
+                                                            <i class="fas fa-trash-can"></i> Delete
+                                                        </button>
                                                     </form>
                                                 </div>
                                             </article>
