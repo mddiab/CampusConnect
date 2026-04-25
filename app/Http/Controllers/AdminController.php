@@ -183,7 +183,7 @@ class AdminController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
             'role' => 'required|string|in:admin,staff,student',
             'department_id' => [
                 'nullable',
@@ -207,8 +207,22 @@ class AdminController extends Controller
         return back()->with('success', 'User updated successfully.');
     }
 
-    public function destroyUser(User $user): RedirectResponse
+    public function destroyUser(Request $request, User $user): RedirectResponse
     {
+        if ($request->user()->is($user)) {
+            return back()->with('error', 'You cannot delete your own admin account while you are signed in.');
+        }
+
+        if ($user->role === User::ROLE_ADMIN && User::query()->where('role', User::ROLE_ADMIN)->count() <= 1) {
+            return back()->with('error', 'At least one admin account must remain in the system.');
+        }
+
+        $user->loadCount(['serviceRequests', 'serviceRequestMessages']);
+
+        if ($user->service_requests_count > 0 || $user->service_request_messages_count > 0) {
+            return back()->with('error', 'This user cannot be deleted while they still have request history or conversation messages.');
+        }
+
         $user->delete();
 
         return back()->with('success', 'User deleted successfully.');
@@ -284,13 +298,13 @@ class AdminController extends Controller
 
         $departmentChanged = (int) $serviceCategory->department_id !== (int) $validated['department_id'];
 
-        $serviceCategory->update($validated);
-
-        if ($departmentChanged) {
-            ServiceRequest::query()
-                ->where('service_category_id', $serviceCategory->id)
-                ->update(['department_id' => $validated['department_id']]);
+        if ($departmentChanged && $serviceCategory->serviceRequests()->exists()) {
+            throw ValidationException::withMessages([
+                'department_id' => 'This category already has service requests, so it cannot be moved to another department.',
+            ]);
         }
+
+        $serviceCategory->update($validated);
 
         return back()->with('success', 'Service category updated successfully.');
     }
@@ -323,7 +337,8 @@ class AdminController extends Controller
                 });
             })
             ->latest()
-            ->get();
+            ->paginate(20, ['*'], 'users_page')
+            ->withQueryString();
 
         $allDepartments = Department::query()
             ->orderBy('name')
@@ -338,7 +353,7 @@ class AdminController extends Controller
             ->when($request->filled('dept') && $request->dept !== 'all', function ($query) use ($request) {
                 $query->where('id', $request->dept);
             })
-            ->withCount(['users', 'categories', 'serviceRequests'])
+            ->withCount(['staffMembers', 'categories', 'serviceRequests'])
             ->orderBy('name')
             ->get();
 

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ServiceRequest;
+use App\Models\Department;
 use App\Models\ServiceCategory;
+use App\Models\ServiceRequest;
+use App\Models\User;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -64,6 +66,8 @@ class StudentRequestController extends Controller
     {
         abort_unless($serviceRequest->canBeViewedBy($request->user()), 403);
 
+        $this->markCompletedRequestViewed($request, $serviceRequest);
+
         $serviceRequest->loadMissing([
             'user',
             'department',
@@ -79,6 +83,7 @@ class StudentRequestController extends Controller
     public function storeMessage(Request $request, ServiceRequest $serviceRequest): RedirectResponse
     {
         abort_unless($serviceRequest->canBeViewedBy($request->user()), 403);
+        abort_if($serviceRequest->isArchived(), 403);
 
         $validated = $request->validate([
             'message' => ['required', 'string', 'max:5000'],
@@ -100,7 +105,7 @@ class StudentRequestController extends Controller
         abort_unless($serviceRequest->canBeEditedBy($request->user()), 403);
 
         $serviceRequest->loadMissing(['department', 'serviceCategory']);
-        $departments = \App\Models\Department::query()->with('categories')->get();
+        $departments = Department::query()->with('categories')->get();
 
         return view('students.requests.edit', [
             'serviceRequest' => $serviceRequest,
@@ -161,5 +166,28 @@ class StudentRequestController extends Controller
             $serviceRequest->attachment_path,
             $serviceRequest->attachment_original_name ?? basename($serviceRequest->attachment_path),
         );
+    }
+
+    private function markCompletedRequestViewed(Request $request, ServiceRequest $serviceRequest): void
+    {
+        if ($request->user()->role !== User::ROLE_STUDENT
+            || $serviceRequest->status !== ServiceRequest::STATUS_COMPLETED
+            || $serviceRequest->isArchived()) {
+            return;
+        }
+
+        if ($serviceRequest->first_completed_view_at === null) {
+            $serviceRequest->forceFill([
+                'first_completed_view_at' => now(),
+            ])->save();
+
+            return;
+        }
+
+        if ($serviceRequest->first_completed_view_at->lte(now()->subDay())) {
+            $serviceRequest->forceFill([
+                'archived_at' => now(),
+            ])->save();
+        }
     }
 }

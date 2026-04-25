@@ -39,6 +39,7 @@ class StaffRequestController extends Controller
         if ($staff->department_id) {
             $departmentRequests = ServiceRequest::query()
                 ->with(['user', 'department', 'serviceCategory'])
+                ->notArchived()
                 ->forDepartment($staff->department_id);
 
             $filteredRequestQuery = (clone $departmentRequests)
@@ -123,6 +124,7 @@ class StaffRequestController extends Controller
     public function show(Request $request, ServiceRequest $serviceRequest): View
     {
         abort_unless($serviceRequest->canBeManagedBy($request->user()), 403);
+        abort_if($serviceRequest->isArchived(), 403);
 
         $serviceRequest->loadMissing([
             'user',
@@ -133,6 +135,7 @@ class StaffRequestController extends Controller
 
         $departmentRequests = ServiceRequest::query()
             ->with(['user', 'serviceCategory'])
+            ->notArchived()
             ->forDepartment($serviceRequest->department_id);
 
         return view('staff.requests.show', [
@@ -149,6 +152,7 @@ class StaffRequestController extends Controller
     public function storeMessage(Request $request, ServiceRequest $serviceRequest): RedirectResponse
     {
         abort_unless($serviceRequest->canBeManagedBy($request->user()), 403);
+        abort_if($serviceRequest->isArchived(), 403);
 
         $validated = $request->validate([
             'message' => ['required', 'string', 'max:5000'],
@@ -166,6 +170,7 @@ class StaffRequestController extends Controller
         $serviceRequest->loadMissing(['department', 'serviceCategory']);
 
         abort_unless($serviceRequest->canBeManagedBy($request->user()), 403);
+        abort_if($serviceRequest->isArchived(), 403);
 
         $validated = $request->validate([
             'status' => ['required', 'string', Rule::in(ServiceRequest::statuses())],

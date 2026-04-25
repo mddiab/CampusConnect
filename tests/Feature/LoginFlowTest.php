@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
 
 class LoginFlowTest extends TestCase
@@ -72,5 +73,27 @@ class LoginFlowTest extends TestCase
             ->get(route('student.dashboard'));
 
         $response->assertRedirect(route('staff.dashboard'));
+    }
+
+    public function test_login_attempts_are_rate_limited(): void
+    {
+        RateLimiter::clear('limited@example.com|127.0.0.1');
+
+        for ($attempt = 1; $attempt <= 5; $attempt++) {
+            $this
+                ->from(route('login'))
+                ->post(route('login.store'), [
+                    'email' => 'limited@example.com',
+                    'password' => 'wrong-password',
+                ])
+                ->assertRedirect(route('login'));
+        }
+
+        $this
+            ->post(route('login.store'), [
+                'email' => 'limited@example.com',
+                'password' => 'wrong-password',
+            ])
+            ->assertTooManyRequests();
     }
 }

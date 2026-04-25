@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'is_urgent',
     'staff_notes',
     'resolved_at',
+    'first_completed_view_at',
     'archived_at',
     'attachment_path',
     'attachment_original_name',
@@ -30,7 +31,9 @@ class ServiceRequest extends Model
     use HasFactory;
 
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_IN_PROGRESS = 'in_progress';
+
     public const STATUS_COMPLETED = 'completed';
 
     protected static function booted(): void
@@ -95,6 +98,8 @@ class ServiceRequest extends Model
         return [
             'is_urgent' => 'boolean',
             'resolved_at' => 'datetime',
+            'first_completed_view_at' => 'datetime',
+            'archived_at' => 'datetime',
         ];
     }
 
@@ -181,6 +186,8 @@ class ServiceRequest extends Model
      */
     public function canBeEditedBy(User $user): bool
     {
-        return $this->user_id === $user->id && $this->status === self::STATUS_PENDING;
+        return $this->user_id === $user->id
+            && $this->status === self::STATUS_PENDING
+            && ! $this->isArchived();
     }
 }

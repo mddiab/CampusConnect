@@ -10,14 +10,15 @@ class AssistantWidgetTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_login_page_includes_the_support_assistant(): void
+    public function test_guest_login_page_does_not_include_the_support_assistant(): void
     {
         $response = $this->get(route('login'));
 
         $response
             ->assertOk()
-            ->assertSee('CampusConnect Assistant')
-            ->assertSee('Message CampusConnect');
+            ->assertDontSee('CampusConnect Assistant')
+            ->assertDontSee('Message CampusConnect')
+            ->assertDontSee('data-assistant', false);
     }
 
     public function test_authenticated_staff_dashboard_includes_the_support_assistant(): void

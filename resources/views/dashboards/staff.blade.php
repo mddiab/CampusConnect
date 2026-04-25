@@ -43,24 +43,28 @@
 
                     <div class="stat-row stat-row-four">
                         <div class="stat-box">
+                            <div class="stat-icon" aria-hidden="true"><i class="fas fa-inbox"></i></div>
                             <span class="stat-kicker">Pending</span>
                             <strong>{{ $pendingRequestCount }}</strong>
                             <span>New requests waiting for action</span>
                         </div>
 
                         <div class="stat-box">
+                            <div class="stat-icon" aria-hidden="true"><i class="fas fa-screwdriver-wrench"></i></div>
                             <span class="stat-kicker">In Progress</span>
                             <strong>{{ $inProgressRequestCount }}</strong>
                             <span>Requests currently being handled</span>
                         </div>
 
                         <div class="stat-box">
+                            <div class="stat-icon" aria-hidden="true"><i class="fas fa-clipboard-check"></i></div>
                             <span class="stat-kicker">Completed</span>
                             <strong>{{ $completedRequestCount }}</strong>
                             <span>Closed requests in this department</span>
                         </div>
 
                         <div class="stat-box">
+                            <div class="stat-icon" aria-hidden="true"><i class="fas fa-triangle-exclamation"></i></div>
                             <span class="stat-kicker">Urgent</span>
                             <strong>{{ $urgentRequestCount }}</strong>
                             <span>Priority tickets needing attention</span>
@@ -103,7 +107,7 @@
                             Search by ticket title, student, description, or category. Status and priority filters apply only to {{ $department->name }} requests.
                         </p>
 
-                        <form method="GET" action="{{ route('staff.dashboard') }}" class="toolbar-grid">
+                        <form method="GET" action="{{ route('staff.dashboard') }}" class="toolbar-grid" data-preserve-scroll>
                             <div class="form-group">
                                 <label for="search">Search Queue</label>
                                 <input
@@ -135,7 +139,7 @@
 
                             <div class="toolbar-actions">
                                 <button type="submit" class="button button-primary">Apply Filters</button>
-                                <a href="{{ route('staff.dashboard') }}" class="button button-plain">Reset</a>
+                                <a href="{{ route('staff.dashboard') }}" class="button button-plain" data-preserve-scroll>Reset</a>
                             </div>
                         </form>
 

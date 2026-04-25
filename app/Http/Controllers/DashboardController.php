@@ -17,47 +17,59 @@ class DashboardController extends Controller
 
     public function student(Request $request): View
     {
-        $query = $request->user()->serviceRequests();
+        $this->archiveCompletedRequestsFor($request);
 
-        // Apply search filter
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
+        $searchTerm = trim($request->string('search')->toString());
+        $selectedStatus = $request->string('status')->toString();
+        $selectedDepartmentId = $request->integer('department_id') ?: null;
+        $selectedCategoryId = $request->integer('service_category_id') ?: null;
+        $selectedSort = $request->string('sort')->toString() ?: 'newest';
+
+        if (! in_array($selectedStatus, ['all', '', ...ServiceRequest::statuses()], true)) {
+            $selectedStatus = 'all';
+        }
+
+        if (! in_array($selectedSort, ['newest', 'latest', 'oldest', 'title', 'title-desc', 'urgent'], true)) {
+            $selectedSort = 'newest';
+        }
+
+        $query = $request->user()
+            ->serviceRequests()
+            ->with(['department', 'serviceCategory']);
+
+        if ($searchTerm !== '') {
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                    ->orWhere('description', 'like', "%{$searchTerm}%");
             });
         }
 
-        // Apply status filter
-        if ($request->filled('status') && $request->input('status') !== 'all') {
-            $query->where('status', $request->input('status'));
+        if ($selectedStatus !== '' && $selectedStatus !== 'all') {
+            $query->where('status', $selectedStatus);
         }
 
-        // Apply department filter
-        if ($request->filled('department') && $request->input('department') !== 'all') {
-            $query->where('department_id', $request->input('department'));
+        if ($selectedDepartmentId) {
+            $query->where('department_id', $selectedDepartmentId);
         }
 
-        // Apply category filter
-        if ($request->filled('category') && $request->input('category') !== 'all') {
-            $query->where('service_category_id', $request->input('category'));
+        if ($selectedCategoryId) {
+            $query->where('service_category_id', $selectedCategoryId);
         }
 
-        // Apply sort
-        $sort = $request->input('sort', 'latest');
-        match ($sort) {
-            'oldest' => $query->oldest(),
-            'title' => $query->orderBy('title', 'asc'),
-            'title-desc' => $query->orderBy('title', 'desc'),
-            default => $query->latest(),
-        };
+        $activeRequests = $this->applyStudentRequestSort(
+            (clone $query)->notArchived(),
+            $selectedSort,
+        )
+            ->paginate(12, ['*'], 'active_page')
+            ->withQueryString();
 
-        // Get all requests with eager loading
-        $allRequests = $query->with(['department', 'serviceCategory'])->get();
+        $archivedRequests = (clone $query)
+            ->archived()
+            ->latest('archived_at')
+            ->paginate(8, ['*'], 'archived_page')
+            ->withQueryString();
 
-        // Separate archived and active
-        $activeRequests = $allRequests->filter(fn ($r) => !$r->archived_at);
-        $archivedRequests = $allRequests->filter(fn ($r) => $r->archived_at);
+        $allActiveRequestsQuery = $request->user()->serviceRequests()->notArchived();
 
         $departments = Department::query()
             ->with(['categories' => fn ($query) => $query->orderBy('name')])
@@ -67,12 +79,16 @@ class DashboardController extends Controller
         return view('dashboards.student', [
             'activeRequests' => $activeRequests,
             'archivedRequests' => $archivedRequests,
-            'recentRequests' => $activeRequests->sortByDesc('updated_at')->take(3),
-            'pendingRequestCount' => $activeRequests->where('status', ServiceRequest::STATUS_PENDING)->count(),
-            'inProgressRequestCount' => $activeRequests->where('status', ServiceRequest::STATUS_IN_PROGRESS)->count(),
-            'completedRequestCount' => $activeRequests->where('status', ServiceRequest::STATUS_COMPLETED)->count(),
-            'totalRequestCount' => $activeRequests->count(),
-            'archivedRequestCount' => $archivedRequests->count(),
+            'recentRequests' => (clone $allActiveRequestsQuery)
+                ->with(['department', 'serviceCategory'])
+                ->latest('updated_at')
+                ->take(3)
+                ->get(),
+            'pendingRequestCount' => (clone $allActiveRequestsQuery)->where('status', ServiceRequest::STATUS_PENDING)->count(),
+            'inProgressRequestCount' => (clone $allActiveRequestsQuery)->where('status', ServiceRequest::STATUS_IN_PROGRESS)->count(),
+            'completedRequestCount' => (clone $allActiveRequestsQuery)->where('status', ServiceRequest::STATUS_COMPLETED)->count(),
+            'totalRequestCount' => (clone $allActiveRequestsQuery)->count(),
+            'archivedRequestCount' => $request->user()->serviceRequests()->archived()->count(),
             'departments' => $departments,
             'categoriesByDepartment' => $departments
                 ->mapWithKeys(fn (Department $department) => [
@@ -85,11 +101,38 @@ class DashboardController extends Controller
                         ->all(),
                 ])
                 ->all(),
+            'selectedDepartmentId' => $selectedDepartmentId,
+            'selectedCategoryId' => $selectedCategoryId,
+            'selectedStatus' => $selectedStatus,
+            'selectedSort' => $selectedSort,
+            'searchTerm' => $searchTerm,
         ]);
     }
 
     public function admin(): View
     {
         return view('dashboards.admin');
+    }
+
+    private function applyStudentRequestSort($query, string $sort)
+    {
+        return match ($sort) {
+            'oldest' => $query->oldest(),
+            'title' => $query->orderBy('title'),
+            'title-desc' => $query->orderByDesc('title'),
+            'urgent' => $query->orderByDesc('is_urgent')->latest(),
+            default => $query->latest(),
+        };
+    }
+
+    private function archiveCompletedRequestsFor(Request $request): void
+    {
+        $request->user()
+            ->serviceRequests()
+            ->where('status', ServiceRequest::STATUS_COMPLETED)
+            ->whereNull('archived_at')
+            ->whereNotNull('first_completed_view_at')
+            ->where('first_completed_view_at', '<=', now()->subDay())
+            ->update(['archived_at' => now()]);
     }
 }

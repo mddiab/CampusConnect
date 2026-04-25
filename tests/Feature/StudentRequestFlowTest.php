@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Department;
-use App\Models\ServiceRequest;
 use App\Models\ServiceCategory;
+use App\Models\ServiceRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -123,6 +123,69 @@ class StudentRequestFlowTest extends TestCase
             ->assertDontSee('Another student request');
     }
 
+    public function test_student_dashboard_filters_by_department_category_and_sorts_urgent_first(): void
+    {
+        $informationTechnology = Department::query()
+            ->where('name', 'Information Technology')
+            ->firstOrFail();
+
+        $maintenance = Department::query()
+            ->where('name', 'Maintenance')
+            ->firstOrFail();
+
+        $itCategory = ServiceCategory::query()
+            ->where('name', 'Technical Support')
+            ->where('department_id', $informationTechnology->id)
+            ->firstOrFail();
+
+        $maintenanceCategory = ServiceCategory::query()
+            ->where('name', 'Facility Maintenance')
+            ->where('department_id', $maintenance->id)
+            ->firstOrFail();
+
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+            'service_category_id' => $itCategory->id,
+            'title' => 'Standard IT request',
+            'is_urgent' => false,
+        ]);
+
+        ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+            'service_category_id' => $itCategory->id,
+            'title' => 'Urgent IT request',
+            'is_urgent' => true,
+        ]);
+
+        ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+            'service_category_id' => $maintenanceCategory->id,
+            'title' => 'Maintenance request',
+            'is_urgent' => true,
+        ]);
+
+        $response = $this
+            ->actingAs($student)
+            ->get(route('student.dashboard', [
+                'department_id' => $informationTechnology->id,
+                'service_category_id' => $itCategory->id,
+                'sort' => 'urgent',
+            ]));
+
+        $response
+            ->assertOk()
+            ->assertViewHas('activeRequests', function ($requests): bool {
+                return $requests->getCollection()->pluck('title')->values()->all() === [
+                    'Urgent IT request',
+                    'Standard IT request',
+                ];
+            });
+    }
+
     public function test_student_cannot_view_another_students_request(): void
     {
         $student = User::factory()->create([
@@ -169,6 +232,76 @@ class StudentRequestFlowTest extends TestCase
             'author_role' => User::ROLE_STUDENT,
             'message' => 'I can share the classroom number if that helps your team find the issue.',
         ]);
+    }
+
+    public function test_completed_request_records_first_student_view_time(): void
+    {
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        $serviceRequest = ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+            'status' => ServiceRequest::STATUS_COMPLETED,
+            'first_completed_view_at' => null,
+            'archived_at' => null,
+        ]);
+
+        $this
+            ->actingAs($student)
+            ->get(route('student.requests.show', $serviceRequest))
+            ->assertOk();
+
+        $serviceRequest->refresh();
+
+        $this->assertNotNull($serviceRequest->first_completed_view_at);
+        $this->assertNull($serviceRequest->archived_at);
+    }
+
+    public function test_student_dashboard_archives_completed_requests_after_view_window(): void
+    {
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        $serviceRequest = ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+            'title' => 'Completed request ready for archive',
+            'status' => ServiceRequest::STATUS_COMPLETED,
+            'first_completed_view_at' => now()->subHours(25),
+            'archived_at' => null,
+        ]);
+
+        $this
+            ->actingAs($student)
+            ->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertSee('Completed request ready for archive');
+
+        $this->assertNotNull($serviceRequest->refresh()->archived_at);
+    }
+
+    public function test_archived_request_is_read_only_for_student_replies(): void
+    {
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        $serviceRequest = ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+            'status' => ServiceRequest::STATUS_COMPLETED,
+            'first_completed_view_at' => now()->subDays(2),
+            'archived_at' => now()->subDay(),
+        ]);
+
+        $this
+            ->actingAs($student)
+            ->post(route('student.requests.messages.store', $serviceRequest), [
+                'message' => 'This archived request should stay read-only.',
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseCount('service_request_messages', 0);
     }
 
     public function test_student_cannot_reply_to_another_students_request_conversation(): void

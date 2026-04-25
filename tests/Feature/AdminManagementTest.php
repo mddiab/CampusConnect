@@ -93,6 +93,91 @@ class AdminManagementTest extends TestCase
         ]);
     }
 
+    public function test_admin_cannot_move_a_category_that_is_still_used_by_requests(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $informationTechnology = Department::query()
+            ->where('name', 'Information Technology')
+            ->firstOrFail();
+
+        $maintenance = Department::query()
+            ->where('name', 'Maintenance')
+            ->firstOrFail();
+
+        $category = ServiceCategory::query()
+            ->where('name', 'Technical Support')
+            ->where('department_id', $informationTechnology->id)
+            ->firstOrFail();
+
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+            'service_category_id' => $category->id,
+        ]);
+
+        $response = $this
+            ->actingAs($admin)
+            ->from(route('admin.dashboard'))
+            ->put(route('admin.categories.update', $category), [
+                'name' => $category->name,
+                'department_id' => $maintenance->id,
+            ]);
+
+        $response
+            ->assertRedirect(route('admin.dashboard'))
+            ->assertSessionHasErrors('department_id');
+
+        $this->assertSame($informationTechnology->id, $category->refresh()->department_id);
+    }
+
+    public function test_admin_cannot_delete_their_own_account(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $this
+            ->actingAs($admin)
+            ->delete(route('admin.users.destroy', $admin))
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $admin->id,
+        ]);
+    }
+
+    public function test_admin_cannot_delete_user_with_request_history(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+        ]);
+
+        $this
+            ->actingAs($admin)
+            ->delete(route('admin.users.destroy', $student))
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $student->id,
+        ]);
+    }
+
     public function test_admin_reports_page_loads_and_can_export_csv(): void
     {
         $admin = User::factory()->create([

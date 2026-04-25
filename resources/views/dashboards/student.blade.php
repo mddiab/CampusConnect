@@ -11,52 +11,7 @@
 @endphp
 
 @section('content')
-    <style>
-        .urgent-toggle-input {
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            margin: 0;
-            border: 1px solid rgba(95, 67, 167, 0.38);
-            border-radius: 6px;
-            background: #ffffff;
-            display: grid;
-            place-items: center;
-            transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
-        }
-
-        .urgent-toggle-input::after {
-            content: '';
-            width: 10px;
-            height: 6px;
-            border-left: 2px solid #ffffff;
-            border-bottom: 2px solid #ffffff;
-            transform: rotate(-45deg) scale(0);
-            transform-origin: center;
-            transition: transform 140ms ease;
-        }
-
-        .urgent-toggle-input:checked {
-            border-color: #dc2626;
-            background: #dc2626;
-            box-shadow: 0 6px 16px rgba(220, 38, 38, 0.18);
-        }
-
-        .urgent-toggle-input:checked::after {
-            transform: rotate(-45deg) scale(1);
-        }
-
-        .urgent-toggle-input:focus-visible {
-            outline: none;
-            box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.16);
-        }
-
-        .urgent-toggle-input:hover {
-            border-color: #dc2626;
-        }
-    </style>
-
-    <main class="page">
+<main class="page">
         <div class="container">
             @if (session('status'))
                 <div class="success-box">
@@ -78,22 +33,26 @@
 
                 <div class="stat-row">
                     <div class="stat-box">
+                        <div class="stat-icon" aria-hidden="true"><i class="fas fa-hourglass-half"></i></div>
                         <strong>{{ $pendingRequestCount }}</strong>
                         <span>Pending requests waiting for department review.</span>
                     </div>
 
                     <div class="stat-box">
+                        <div class="stat-icon" aria-hidden="true"><i class="fas fa-arrows-rotate"></i></div>
                         <strong>{{ $inProgressRequestCount }}</strong>
                         <span>Requests currently being handled by staff.</span>
                     </div>
 
                     <div class="stat-box">
+                        <div class="stat-icon" aria-hidden="true"><i class="fas fa-circle-check"></i></div>
                         <strong>{{ $completedRequestCount }}</strong>
                         <span>Requests that have been resolved and marked completed.</span>
                     </div>
 
                     @if ($archivedRequestCount > 0)
                         <div class="stat-box">
+                            <div class="stat-icon" aria-hidden="true"><i class="fas fa-box-archive"></i></div>
                             <strong>{{ $archivedRequestCount }}</strong>
                             <span>Archived requests from past submissions.</span>
                         </div>
@@ -255,7 +214,7 @@
                 </div>
 
                 <!-- Search & Filter Form (Feature 4: Request Search & Filtering) -->
-                <form method="GET" action="{{ route('student.dashboard') }}" style="margin-bottom: 20px;">
+                <form method="GET" action="{{ route('student.dashboard') }}" style="margin-bottom: 20px;" data-preserve-scroll>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;">
                         <!-- Search Input -->
                         <div class="form-group" style="margin: 0;">
@@ -264,7 +223,7 @@
                                 type="text"
                                 id="search"
                                 name="search"
-                                value="{{ request('search') }}"
+                                value="{{ $searchTerm }}"
                                 placeholder="Search title or description..."
                                 style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"
                             >
@@ -280,7 +239,7 @@
                             >
                                 <option value="">All Departments</option>
                                 @foreach ($departments as $dept)
-                                    <option value="{{ $dept->id }}" @selected(request('department_id') == $dept->id)>
+                                    <option value="{{ $dept->id }}" @selected((string) $selectedDepartmentId === (string) $dept->id)>
                                         {{ $dept->name }}
                                     </option>
                                 @endforeach
@@ -296,9 +255,9 @@
                                 style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"
                             >
                                 <option value="">All Categories</option>
-                                @if (request('department_id'))
-                                    @foreach ($categoriesByDepartment[request('department_id')] ?? [] as $category)
-                                        <option value="{{ $category['id'] }}" @selected(request('service_category_id') == $category['id'])>
+                                @if ($selectedDepartmentId)
+                                    @foreach ($categoriesByDepartment[$selectedDepartmentId] ?? [] as $category)
+                                        <option value="{{ $category['id'] }}" @selected((string) $selectedCategoryId === (string) $category['id'])>
                                             {{ $category['name'] }}
                                         </option>
                                     @endforeach
@@ -315,9 +274,9 @@
                                 style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"
                             >
                                 <option value="">All Statuses</option>
-                                <option value="pending" @selected(request('status') === 'pending')>Pending</option>
-                                <option value="in_progress" @selected(request('status') === 'in_progress')>In Progress</option>
-                                <option value="completed" @selected(request('status') === 'completed')>Completed</option>
+                                <option value="pending" @selected($selectedStatus === 'pending')>Pending</option>
+                                <option value="in_progress" @selected($selectedStatus === 'in_progress')>In Progress</option>
+                                <option value="completed" @selected($selectedStatus === 'completed')>Completed</option>
                             </select>
                         </div>
 
@@ -329,9 +288,9 @@
                                 name="sort"
                                 style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"
                             >
-                                <option value="newest" @selected(request('sort', 'newest') === 'newest')>Newest First</option>
-                                <option value="oldest" @selected(request('sort') === 'oldest')>Oldest First</option>
-                                <option value="urgent" @selected(request('sort') === 'urgent')>Urgent First</option>
+                                <option value="newest" @selected($selectedSort === 'newest' || $selectedSort === 'latest')>Newest First</option>
+                                <option value="oldest" @selected($selectedSort === 'oldest')>Oldest First</option>
+                                <option value="urgent" @selected($selectedSort === 'urgent')>Urgent First</option>
                             </select>
                         </div>
                     </div>
@@ -340,16 +299,16 @@
                         <button type="submit" class="button button-primary" style="padding: 8px 16px; font-size: 14px;">
                             Search & Filter
                         </button>
-                        <a href="{{ route('student.dashboard') }}" class="button button-secondary" style="padding: 8px 16px; font-size: 14px;">
+                        <a href="{{ route('student.dashboard') }}" class="button button-secondary" style="padding: 8px 16px; font-size: 14px;" data-preserve-scroll>
                             Clear Filters
                         </a>
                     </div>
                 </form>
 
-                @if (request('search') || request('department_id') || request('service_category_id') || request('status') || request('sort'))
+                @if ($searchTerm !== '' || $selectedDepartmentId || $selectedCategoryId || ($selectedStatus !== '' && $selectedStatus !== 'all') || $selectedSort !== 'newest')
                     <p style="font-size: 14px; color: #666; margin-bottom: 16px;">
-                        Showing {{ $activeRequests->count() }} matched request(s)
-                        @if (request('search')) matching "{{ request('search') }}"@endif
+                        Showing {{ $activeRequests->total() }} matched active request(s)
+                        @if ($searchTerm !== '') matching "{{ $searchTerm }}"@endif
                     </p>
                 @endif
 
@@ -404,12 +363,14 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        {{ $activeRequests->links('pagination.galaxy') }}
                     @endif
 
                     @if ($archivedRequests->isNotEmpty())
                         <!-- Archived Requests Section (Feature 7: Request History & Archiving) -->
                         <section style="margin-top: 30px; padding-top: 30px; border-top: 2px solid #e5e7eb;">
-                            <h3 style="margin-bottom: 12px;">📦 Archived Requests ({{ $archivedRequests->count() }})</h3>
+                            <h3 style="margin-bottom: 12px;">📦 Archived Requests ({{ $archivedRequests->total() }})</h3>
                             <p style="font-size: 14px; color: #666; margin-bottom: 16px;">
                                 These requests were automatically archived 24 hours after you first viewed them when they were in completed status.
                             </p>
@@ -442,75 +403,12 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            {{ $archivedRequests->links('pagination.galaxy') }}
                         </section>
                     @endif
                 @endif
             </section>
         </div>
     </main>
-
-    <script>
-        (() => {
-            const departmentSelect = document.getElementById('department_id');
-            const categorySelect = document.getElementById('service_category_id');
-
-            if (!departmentSelect || !categorySelect) {
-                return;
-            }
-
-            const allCategoryOptions = Array.from(categorySelect.querySelectorAll('option[data-department-id]')).map((option) => ({
-                value: option.value,
-                label: option.textContent,
-                departmentId: option.dataset.departmentId,
-            }));
-
-            const renderCategories = (selectedCategoryId = categorySelect.dataset.selected || '') => {
-                const departmentId = departmentSelect.value;
-                const categories = departmentId
-                    ? allCategoryOptions.filter((category) => String(category.departmentId) === String(departmentId))
-                    : [];
-
-                const seenCategoryLabels = new Set();
-                const uniqueCategories = categories.filter((category) => {
-                    const key = category.label.trim().toLowerCase();
-
-                    if (seenCategoryLabels.has(key)) {
-                        return false;
-                    }
-
-                    seenCategoryLabels.add(key);
-                    return true;
-                });
-
-                categorySelect.innerHTML = '';
-
-                const placeholder = document.createElement('option');
-                placeholder.value = '';
-                placeholder.textContent = departmentId
-                    ? 'Select the category that best matches the request'
-                    : 'Select a department first';
-
-                categorySelect.appendChild(placeholder);
-
-                uniqueCategories.forEach((category) => {
-                    const option = document.createElement('option');
-                    option.value = String(category.value);
-                    option.textContent = category.label;
-
-                    if (String(category.value) === String(selectedCategoryId)) {
-                        option.selected = true;
-                    }
-
-                    categorySelect.appendChild(option);
-                });
-
-                categorySelect.disabled = false;
-            };
-
-            departmentSelect.addEventListener('change', () => renderCategories(''));
-            departmentSelect.addEventListener('input', () => renderCategories(''));
-
-            renderCategories();
-        })();
-    </script>
 @endsection

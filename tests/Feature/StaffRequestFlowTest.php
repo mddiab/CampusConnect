@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Department;
-use App\Models\ServiceRequest;
 use App\Models\ServiceCategory;
+use App\Models\ServiceRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -189,6 +189,40 @@ class StaffRequestFlowTest extends TestCase
             ]);
 
         $response->assertForbidden();
+    }
+
+    public function test_staff_cannot_open_archived_department_request(): void
+    {
+        $department = Department::query()
+            ->where('name', 'Information Technology')
+            ->firstOrFail();
+
+        $category = ServiceCategory::query()
+            ->where('name', 'Technical Support')
+            ->where('department_id', $department->id)
+            ->firstOrFail();
+
+        $staff = User::factory()->create([
+            'role' => User::ROLE_STAFF,
+            'department_id' => $department->id,
+        ]);
+
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+        $serviceRequest = ServiceRequest::factory()->create([
+            'user_id' => $student->id,
+            'service_category_id' => $category->id,
+            'status' => ServiceRequest::STATUS_COMPLETED,
+            'first_completed_view_at' => now()->subDays(2),
+            'archived_at' => now()->subDay(),
+        ]);
+
+        $this
+            ->actingAs($staff)
+            ->get(route('staff.requests.show', $serviceRequest))
+            ->assertForbidden();
     }
 
     public function test_staff_can_add_a_reply_to_request_conversation_for_their_department(): void
