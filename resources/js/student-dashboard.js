@@ -1,4 +1,38 @@
 (() => {
+    const filterForm = document.getElementById('student-filter-form');
+    const resultsContainer = document.getElementById('student-results');
+
+    if (filterForm && resultsContainer) {
+        let debounceTimer;
+
+        async function fetchResults() {
+            const params = new URLSearchParams(new FormData(filterForm));
+            const url = filterForm.action + '?' + params.toString();
+            try {
+                const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const html = await response.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const fresh = doc.getElementById('student-results');
+                if (fresh) resultsContainer.innerHTML = fresh.innerHTML;
+            } catch (e) { /* network error — let user submit manually */ }
+        }
+
+        filterForm.addEventListener('submit', (e) => { e.preventDefault(); fetchResults(); });
+
+        filterForm.querySelectorAll('select').forEach((el) => {
+            el.addEventListener('change', () => fetchResults());
+        });
+
+        filterForm.querySelectorAll('input[type="text"]').forEach((el) => {
+            el.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => fetchResults(), 400);
+            });
+        });
+    }
+})();
+
+(() => {
             const departmentSelect = document.getElementById('department_id');
             const categorySelect = document.getElementById('service_category_id');
 

@@ -214,7 +214,7 @@
                 </div>
 
                 <!-- Search & Filter Form (Feature 4: Request Search & Filtering) -->
-                <form method="GET" action="{{ route('student.dashboard') }}" style="margin-bottom: 20px;" data-preserve-scroll>
+                <form id="student-filter-form" method="GET" action="{{ route('student.dashboard') }}" style="margin-bottom: 20px;" data-preserve-scroll>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;">
                         <!-- Search Input -->
                         <div class="form-group" style="margin: 0;">
@@ -305,6 +305,7 @@
                     </div>
                 </form>
 
+                <div id="student-results">
                 @if ($searchTerm !== '' || $selectedDepartmentId || $selectedCategoryId || ($selectedStatus !== '' && $selectedStatus !== 'all') || $selectedSort !== 'newest')
                     <p style="font-size: 14px; color: #666; margin-bottom: 16px;">
                         Showing {{ $activeRequests->total() }} matched active request(s)
@@ -408,6 +409,7 @@
                         </section>
                     @endif
                 @endif
+                </div>{{-- #student-results --}}
             </section>
         </div>
     </main>

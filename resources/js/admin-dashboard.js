@@ -1,3 +1,76 @@
+(() => {
+    function ajaxFilter(formId, resultsId) {
+        const form = document.getElementById(formId);
+        const container = document.getElementById(resultsId);
+        if (!form || !container) return;
+
+        let debounceTimer;
+
+        async function fetchResults() {
+            const params = new URLSearchParams(new FormData(form));
+            const url = form.action + '?' + params.toString();
+            try {
+                const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const html = await response.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const fresh = doc.getElementById(resultsId);
+                if (fresh) container.innerHTML = fresh.innerHTML;
+            } catch (e) { /* network error — let user submit manually */ }
+        }
+
+        form.addEventListener('submit', (e) => { e.preventDefault(); fetchResults(); });
+
+        form.querySelectorAll('select').forEach((el) => {
+            el.addEventListener('change', () => fetchResults());
+        });
+
+        form.querySelectorAll('input[type="text"]').forEach((el) => {
+            el.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => fetchResults(), 400);
+            });
+        });
+    }
+
+    ajaxFilter('admin-users-form', 'admin-users-results');
+    ajaxFilter('admin-dept-form', 'admin-categories-results');
+})();
+
+// Staff filter AJAX
+(() => {
+    const filterForm = document.getElementById('staff-filter-form');
+    const resultsContainer = document.getElementById('staff-results');
+
+    if (filterForm && resultsContainer) {
+        let debounceTimer;
+
+        async function fetchResults() {
+            const params = new URLSearchParams(new FormData(filterForm));
+            const url = filterForm.action + '?' + params.toString();
+            try {
+                const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const html = await response.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const fresh = doc.getElementById('staff-results');
+                if (fresh) resultsContainer.innerHTML = fresh.innerHTML;
+            } catch (e) { /* network error — let user submit manually */ }
+        }
+
+        filterForm.addEventListener('submit', (e) => { e.preventDefault(); fetchResults(); });
+
+        filterForm.querySelectorAll('select').forEach((el) => {
+            el.addEventListener('change', () => fetchResults());
+        });
+
+        filterForm.querySelectorAll('input[type="text"]').forEach((el) => {
+            el.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => fetchResults(), 400);
+            });
+        });
+    }
+})();
+
 const adminDashboardPage = document.getElementById('adminDashboardPage');
 let lastFocusedElement = null;
 

@@ -111,7 +111,7 @@
                     Staff accounts require a department assignment, and each department is capped at 3 staff logins. Student and admin accounts do not require a department.
                 </p>
 
-                <form method="GET" action="{{ route('admin.dashboard') }}" class="admin-toolbar" data-preserve-scroll>
+                <form id="admin-users-form" method="GET" action="{{ route('admin.dashboard') }}" class="admin-toolbar" data-preserve-scroll>
                     @if (request('dept')) <input type="hidden" name="dept" value="{{ request('dept') }}"> @endif
                     @if (request('status')) <input type="hidden" name="status" value="{{ request('status') }}"> @endif
                     <input
@@ -125,6 +125,7 @@
                     <a href="{{ route('admin.users') }}" class="button button-plain" data-preserve-scroll>Reset</a>
                 </form>
 
+                <div id="admin-users-results">
                 <div class="table-wrap">
                     <table>
                         <thead>
@@ -171,6 +172,7 @@
                 </div>
 
                 {{ $recentUsers->links('pagination.galaxy') }}
+                </div>{{-- #admin-users-results --}}
             </article>
 
             <article class="panel section-id" id="department-management">
@@ -241,7 +243,7 @@
                     Categories are grouped under each department so routing stays predictable. Use the filter to focus on one department when you need to edit categories quickly.
                 </p>
 
-                <form method="GET" action="{{ route('admin.dashboard') }}" class="admin-toolbar" data-preserve-scroll>
+                <form id="admin-dept-form" method="GET" action="{{ route('admin.dashboard') }}" class="admin-toolbar" data-preserve-scroll>
                     @if (request('search')) <input type="hidden" name="search" value="{{ request('search') }}"> @endif
                     @if (request('status')) <input type="hidden" name="status" value="{{ request('status') }}"> @endif
                     <select name="dept" class="compact-select" data-auto-submit>
@@ -253,6 +255,7 @@
                     <a href="{{ route('admin.categories') }}" class="button button-plain" data-preserve-scroll>Reset</a>
                 </form>
 
+                <div id="admin-categories-results">
                 <div class="category-section">
                     <div class="category-overview">
                         <div class="category-overview-card">
@@ -321,6 +324,7 @@
                         @endforeach
                     </div>
                 </div>
+                </div>{{-- #admin-categories-results --}}
             </article>
         </section>
     </div>

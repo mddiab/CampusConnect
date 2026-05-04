@@ -107,7 +107,7 @@
                             Search by ticket title, student, description, or category. Status and priority filters apply only to {{ $department->name }} requests.
                         </p>
 
-                        <form method="GET" action="{{ route('staff.dashboard') }}" class="toolbar-grid" data-preserve-scroll>
+                        <form id="staff-filter-form" method="GET" action="{{ route('staff.dashboard') }}" class="toolbar-grid" data-preserve-scroll>
                             <div class="form-group">
                                 <label for="search">Search Queue</label>
                                 <input
@@ -143,6 +143,7 @@
                             </div>
                         </form>
 
+                        <div id="staff-results">
                         @if ($serviceRequests->isEmpty())
                             <div class="empty-state">
                                 No requests match the current filter for {{ $department->name }}.
@@ -204,6 +205,7 @@
 
                             {{ $serviceRequests->links('pagination.galaxy') }}
                         @endif
+                        </div>{{-- #staff-results --}}
                     </article>
                 </section>
             @else
